@@ -2,11 +2,8 @@ import asyncio
 import pygame
 import sys
 from game.estado import EstadoJogo
-
-#depois pegaremos essas informacoes do config.py
-
-LARGURA, ALTURA = 800, 600
-FPS = 60
+from config import *
+from game.fase_noite import FaseNoite
 
 async def main():
     pygame.init()
@@ -17,6 +14,7 @@ async def main():
     #comecando o saque
     estado_atual = EstadoJogo.NOITE
     a_correr = True
+    fase_noite = FaseNoite()
 
     while a_correr:
         for evento in pygame.event.get():
@@ -24,8 +22,8 @@ async def main():
                 a_correr = False
         if estado_atual == EstadoJogo.NOITE:
             ecra.fill((30, 30, 40))
-            # TODO: fase_noite.atualizar()
-            # TODO: fase_noite.desenhar(ecra)
+            fase_noite.atualizar()
+            fase_noite.desenhar(ecra)
         elif estado_atual == EstadoJogo.DIA:
             ecra.fill((135, 206, 235))
             # TODO: fase_dia.atualizar()
