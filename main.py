@@ -7,6 +7,8 @@ from game.fase_noite import FaseNoite
 
 async def main():
     pygame.init()
+    pygame.mixer.init()
+
     ecra = pygame.display.set_mode((LARGURA, ALTURA))
     pygame.display.set_caption("Nightfall Looter")
     relogio = pygame.time.Clock()
@@ -15,6 +17,7 @@ async def main():
     estado_atual = EstadoJogo.NOITE
     a_correr = True
     fase_noite = FaseNoite()
+    fase_noite.iniciar_musica()
 
     while a_correr:
         for evento in pygame.event.get():

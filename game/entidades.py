@@ -37,9 +37,12 @@ class Bau(pygame.sprite.Sprite):
 
         self.itens = itens if itens else[]
         self.aberto = False
+        self.som_abrir = pygame.mixer.Sound("assets/sons/bau.mpeg")
+        self.som_abrir.set_volume(0.1)
 
     def abrir(self):
         self.aberto = True
+        self.som_abrir.play()
         self.image.fill((100,100,100))
         return self.itens
 

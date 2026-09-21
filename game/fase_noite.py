@@ -20,6 +20,11 @@ class FaseNoite:
 
         self.grupo_sprites.add(bau_armas, bau_tesouro)
         self.grupo_baus.add(bau_armas, bau_tesouro)
+
+    def iniciar_musica(self):
+        pygame.mixer.music.load("assets/sons/masmorra.mp3")
+        pygame.mixer.music.set_volume(3)
+        pygame.mixer.music.play(-1)
     def atualizar(self):
         self.grupo_sprites.update()
         teclas = pygame.key.get_pressed()
