@@ -3,8 +3,10 @@ import pygame
 
 from sys import exit
 from config import *
+#from game.fases import menu, fase_noite, fase_dia, fase_cidade, fim
+from game.fases import fase_noite
 from game.estado import EstadoJogo
-from game.fase_noite import FaseNoite
+
 
 async def main():
     pygame.init()
@@ -14,35 +16,32 @@ async def main():
     pygame.display.set_caption("Nightfall Looter")
     relogio = pygame.time.Clock()
 
-    #fazer animação do menu de dia e quando inicia transiciona pra noite
-    #comecando o saque
+#   fases = {
+#        EstadoJogo.MENU: menu,
+#        EstadoJogo.NOITE: fase_noite,
+#        EstadoJogo.DIA: fase_dia,
+#        EstadoJogo.CIDADE: fase_cidade,
+#        EstadoJogo.FIM : fim,
+#    }
 
-    estado_atual = EstadoJogo.NOITE
-    fase_noite = FaseNoite()
-    fase_noite.iniciar_musica()
-
+    estado_atual = EstadoJogo.MENU
+    fase_atual = fase_noite()
     while True:
-        for evento in pygame.event.get():
+        eventos = pygame.event.get()
+        for evento in eventos:
             if evento.type == pygame.QUIT:
                 pygame.quit()
                 exit()
 
-        if estado_atual == EstadoJogo.NOITE:
-            ecra.fill((30, 30, 40))
-            fase_noite.atualizar()
-            fase_noite.desenhar(ecra)
-        elif estado_atual == EstadoJogo.DIA:
-            ecra.fill((135, 206, 235))
-            # TODO: fase_dia.atualizar()
-            # TODO: fase_dia.desenhar(ecra)
-        elif estado_atual == EstadoJogo.CIDADE:
-            ecra.fill((200, 180, 140))
-            # TODO: fase_cidade.atualizar()
-            # TODO: fase_cidade.desenhar(ecra)
+        #fase_atual = fases[estado_atual]()
+
+
+        fase_atual.atualizar(eventos)
+        fase_atual.desenhar(ecra)
 
         pygame.display.flip()
         relogio.tick(FPS)
-        await asyncio.sleep(0) # FUNDAMENTAL pra rodar no navegador
+        await asyncio.sleep(0)
 
 if __name__ == "__main__":
     asyncio.run(main())
