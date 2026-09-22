@@ -48,8 +48,9 @@ class Bau(pygame.sprite.Sprite):
         self.image.fill((100,100,100))
         return self.itens
 
-    class Cidade(pygame.sprite.Sprite):
-        def __init__(self, x, y, nome):
+
+class Cidade(pygame.sprite.Sprite):
+    def __init__(self, x, y, nome):
             super().__init__()
             self.image = pygame.Surface((40,40))
             self.image.fill((70,130,180))

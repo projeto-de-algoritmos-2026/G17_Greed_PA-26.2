@@ -20,17 +20,19 @@ class FaseNoite(Fase):
 
 
     def atualizar(self, eventos):
-        # Dá pra refazer isso frfr
         super().atualizar(eventos)
-        teclas = pygame.key.get_pressed()
-        if teclas[pygame.K_SPACE]:
-            baus_tocados = pygame.sprite.spritecollide(self.jogador, self.grupo_baus, False)
-            for bau in baus_tocados:
-                if isinstance(bau, Bau):
-                    if not bau.aberto:
-                        itens_saqueados = bau.abrir()
+        for evento in eventos:
+            if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
+                self.tentar_abrir_baus()
 
-                        print("\n BAÚ ABERTO")
-                        for item in itens_saqueados:
-                            print(f"Loot: {item.nome} | Peso: {item.peso} | Valor: {item.valor}")
+    def tentar_abrir_baus(self):
+        baus_proximos = pygame.sprite.spritecollide(self.jogador, self.grupo_baus, False)
+        for bau in baus_proximos:
+            if isinstance(bau, Bau) and not bau.aberto:
+                self.saquear_loot(bau.abrir())
+
+    def saquear_loot(self, itens_saqueados):
+        for item in itens_saqueados:
+            print(f"Loot: {item.nome} | Peso: {item.peso} | Valor: {item.valor}")
+
 

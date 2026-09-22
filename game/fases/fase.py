@@ -1,7 +1,7 @@
 import pygame
 from game.entidades import Jogador
 
-class Fase():
+class Fase:
     def __init__(self, cor_fundo, musica):
         self.musica_ambiente = musica
         self.cor_fundo = cor_fundo
