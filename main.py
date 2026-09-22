@@ -1,8 +1,9 @@
 import asyncio
 import pygame
-import sys
-from game.estado import EstadoJogo
+
+from sys import exit
 from config import *
+from game.estado import EstadoJogo
 from game.fase_noite import FaseNoite
 
 async def main():
@@ -12,17 +13,20 @@ async def main():
     ecra = pygame.display.set_mode((LARGURA, ALTURA))
     pygame.display.set_caption("Nightfall Looter")
     relogio = pygame.time.Clock()
+
     #fazer animação do menu de dia e quando inicia transiciona pra noite
     #comecando o saque
+
     estado_atual = EstadoJogo.NOITE
-    a_correr = True
     fase_noite = FaseNoite()
     fase_noite.iniciar_musica()
 
-    while a_correr:
+    while True:
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                a_correr = False
+                pygame.quit()
+                exit()
+
         if estado_atual == EstadoJogo.NOITE:
             ecra.fill((30, 30, 40))
             fase_noite.atualizar()
@@ -35,14 +39,10 @@ async def main():
             ecra.fill((200, 180, 140))
             # TODO: fase_cidade.atualizar()
             # TODO: fase_cidade.desenhar(ecra)
+
         pygame.display.flip()
         relogio.tick(FPS)
-
-
-        await asyncio.sleep(0)
-
-    pygame.quit()
-    sys.exit()
+        await asyncio.sleep(0) # FUNDAMENTAL pra rodar no navegador
 
 if __name__ == "__main__":
     asyncio.run(main())

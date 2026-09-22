@@ -3,9 +3,9 @@
 <h3><i>Conteúdo da disciplina:</i> Algoritmos Gulosos<br></h3>
 <h3>Alunos</h3>
 
-| Matrícula | Aluno |
-|---|---|
-| 251013660 | Matheus Moretti Soares |
+| Matrícula | Aluno                            |
+|-----------|----------------------------------|
+| 251013660 | Matheus Moretti Soares           |
 | 251019771 | Daniel Filipe Borges de Oliveira |
 
 ---

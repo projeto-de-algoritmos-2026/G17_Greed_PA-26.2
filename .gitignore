@@ -1,10 +1,15 @@
 venv/
 env/
 .venv/
-__pycache__/
+.env
+
+.pytest_cache/
+.coverage
+htmlcov/
 
 .vscode/
 .idea/
 
-build/web/
-.pygbag/
+__pycache__/
+game/__pycache__/
+ui/__pycache__/

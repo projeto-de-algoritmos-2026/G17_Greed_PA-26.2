@@ -1,6 +1,7 @@
 # Classes: Item, Bau, Cidade, Pergaminho, Jogador
 import pygame
 from config import *
+from ui.cores import COR_JOGADOR
 
 class Jogador(pygame.sprite.Sprite):
     def __init__(self, x, y):

@@ -2,11 +2,11 @@
 
 import pygame
 from game.entidades import Jogador, Bau, Item
-from config import COR_FUNDO_MASMORRA
+from ui.cores import COR_FUNDO_MASMORRA
 
 class FaseNoite:
     def __init__(self):
-        self.grupo_sprites  =pygame.sprite.Group() #tudo q mexe no ecra
+        self.grupo_sprites  = pygame.sprite.Group() #tudo q mexe no ecra
         self.grupo_baus = pygame.sprite.Group()
 
         self.jogador = Jogador(x=400, y=300)
