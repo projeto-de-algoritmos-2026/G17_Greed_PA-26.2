@@ -4,25 +4,38 @@ from config import *
 from ui.cores import COR_JOGADOR, COR_BAU
 
 class Jogador(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, paredes):
         super().__init__()
-        self.image = pygame.Surface((40, 40))
+        self.image = pygame.Surface((30, 30))
         self.image.fill(COR_JOGADOR)
-        self.rect = self.image.get_rect(center=(x,y)) # colisao
+        self.rect = self.image.get_rect(topleft=(x+5,y+5)) # colisao
+
+        self.paredes = paredes # pra colisao
 
     def update(self):
         teclas = pygame.key.get_pressed()
-        if teclas[pygame.K_LEFT] or teclas[pygame.K_a]:
-            self.rect.x -= VELOCIDADE_JOGADOR # diminui o x
-        if teclas[pygame.K_RIGHT] or teclas[pygame.K_d]:
-            self.rect.x += VELOCIDADE_JOGADOR
-        if teclas[pygame.K_UP] or teclas[pygame.K_w]:
-            self.rect.y -= VELOCIDADE_JOGADOR # diminui o y
-        if teclas[pygame.K_DOWN] or teclas[pygame.K_s]:
-            self.rect.y += VELOCIDADE_JOGADOR
+
+        dx = 0
+        if teclas[pygame.K_LEFT] or teclas[pygame.K_a]: dx = -VELOCIDADE_JOGADOR
+        if teclas[pygame.K_RIGHT] or teclas[pygame.K_d]: dx = VELOCIDADE_JOGADOR
+        self.rect.x += dx
+
+        for parede in self.paredes:
+            if self.rect.colliderect(parede.rect):
+                if dx > 0: self.rect.right = parede.rect.left
+                if dx < 0: self.rect.left = parede.rect.right
+
+        dy = 0
+        if teclas[pygame.K_UP] or teclas[pygame.K_w]: dy = -VELOCIDADE_JOGADOR
+        if teclas[pygame.K_DOWN] or teclas[pygame.K_s]: dy = VELOCIDADE_JOGADOR
+        self.rect.y += dy
+
+        for parede in self.paredes:
+            if self.rect.colliderect(parede.rect):
+                if dy > 0: self.rect.bottom = parede.rect.top
+                if dy < 0: self.rect.top = parede.rect.bottom
 
         self.rect.clamp_ip(pygame.Rect(0, 0, LARGURA, ALTURA))
-        # o rect do jogador precisa estar dentro do rect da janela
 
 class Item:
     def __init__(self, nome, peso, valor):
@@ -35,7 +48,7 @@ class Bau(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.Surface((40, 40))
         self.image.fill(COR_BAU)
-        self.rect = self.image.get_rect(center=(x,y))
+        self.rect = self.image.get_rect(topleft=(x,y))
 
         self.itens = itens if itens else[] # operador ternário
         self.aberto = False
@@ -59,3 +72,13 @@ class Cidade(pygame.sprite.Sprite):
             #caminhoneiro e cmp
             self.nome = nome
             self.precos = {}
+
+
+class Parede(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+
+        self.image = pygame.Surface((40, 40))
+        self.image.fill((80, 80, 80))
+
+        self.rect = self.image.get_rect(topleft=(x, y))

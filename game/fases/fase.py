@@ -6,8 +6,7 @@ class Fase:
         self.musica_ambiente = musica
         self.cor_fundo = cor_fundo
         self.grupo_sprites = pygame.sprite.Group()
-        self.jogador = Jogador(x=400, y=300)
-        self.grupo_sprites.add(self.jogador)
+
         self.tocar_musica()
 
     def tocar_musica(self):
