@@ -1,12 +1,18 @@
 # Classes: Item, Bau, Cidade, Pergaminho, Jogador
 import pygame
 from config import *
-from ui.cores import COR_JOGADOR, COR_BAU
+from ui.cores import (
+    AZUL_ESCADA,
+    CINZA_BAU_ABERTO,
+    CINZA_PAREDE,
+    COR_BAU,
+    COR_JOGADOR, DOURADO,
+)
 
 class Jogador(pygame.sprite.Sprite):
     def __init__(self, x, y, paredes):
         super().__init__()
-        self.image = pygame.Surface((30, 30))
+        self.image = pygame.Surface((TAMANHO_PISO-0.25*TAMANHO_PISO, TAMANHO_PISO-0.25*TAMANHO_PISO))
         self.image.fill(COR_JOGADOR)
         self.rect = self.image.get_rect(topleft=(x+5,y+5)) # colisao
 
@@ -50,7 +56,7 @@ class Item:
 class Bau(pygame.sprite.Sprite):
     def __init__(self, x, y, itens=None):
         super().__init__()
-        self.image = pygame.Surface((40, 40))
+        self.image = pygame.Surface((TAMANHO_PISO, TAMANHO_PISO))
         self.image.fill(COR_BAU)
         self.rect = self.image.get_rect(topleft=(x,y))
 
@@ -61,28 +67,31 @@ class Bau(pygame.sprite.Sprite):
 
     def abrir(self):
         self.aberto = True
+        self.atualizar_cor()
         self.som_abrir.play()
-        self.image.fill((100,100,100))
+        self.image.fill(CINZA_BAU_ABERTO)
         return self.itens
 
+    def atualizar_cor(self):
+        if not self.aberto:
+            self.image.fill(DOURADO)
+        elif len(self.itens) > 0:
+            self.image.fill(COR_BAU)
+        else:
+            self.image.fill(CINZA_BAU_ABERTO)
 
-class Cidade(pygame.sprite.Sprite):
-    def __init__(self, x, y, nome):
-            super().__init__()
-            self.image = pygame.Surface((40,40))
-            self.image.fill((70,130,180))
-            self.rect = self.image.get_rect(center=(x,y))
-
-            #caminhoneiro e cmp
-            self.nome = nome
-            self.precos = {}
+class Escada(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        super().__init__()
+        self.image = pygame.Surface((TAMANHO_PISO, TAMANHO_PISO))
+        self.image.fill(AZUL_ESCADA)
+        self.rect = self.image.get_rect(topleft=(x, y))
 
 
 class Parede(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
 
-        self.image = pygame.Surface((40, 40))
-        self.image.fill((80, 80, 80))
-
+        self.image = pygame.Surface((TAMANHO_PISO, TAMANHO_PISO))
+        self.image.fill(CINZA_PAREDE)
         self.rect = self.image.get_rect(topleft=(x, y))

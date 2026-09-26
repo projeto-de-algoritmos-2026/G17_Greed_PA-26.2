@@ -1,8 +1,17 @@
 import pygame
 import random
 from game.fases.fase import Fase
-from game.entidades import Jogador, Parede, Bau, Item
-from ui.cores import COR_FUNDO_MASMORRA
+from game.entidades import Jogador, Parede, Bau, Item, Escada
+from ui.cores import (
+    BRANCO,
+    CINZA_INATIVO,
+    COR_BORDA_PAINEL,
+    COR_CURSOR,
+    COR_DIVISORIA_PAINEL,
+    COR_FUNDO_MASMORRA,
+    COR_FUNDO_PAINEL,
+    DOURADO,
+)
 from config import TAMANHO_PISO, COLUNAS, LINHAS
 
 
@@ -117,6 +126,9 @@ class FaseNoite(Fase):
         self.salas_geradas = arvore.obter_salas()
         self.construir_mapa()
 
+        self.escada_gerada = False
+        self.grupo_escada = pygame.sprite.GroupSingle()
+
     def construir_mapa(self):
         for y, linha in enumerate(self.matriz_mapa):
             for x, valor in enumerate(linha):
@@ -135,8 +147,8 @@ class FaseNoite(Fase):
 
             for sala in self.salas_geradas[1:]:
                 cx, cy = sala.center
-                item_teste = Item("Rubi", 1, 100)
-                bau = Bau(cx * TAMANHO_PISO, cy * TAMANHO_PISO, [item_teste])
+                itens_sorteados = self.gerar_loot_aleatorio()
+                bau = Bau(cx * TAMANHO_PISO, cy * TAMANHO_PISO, itens_sorteados)
                 self.grupo_sprites.add(bau)
                 self.grupo_baus.add(bau)
 
@@ -146,7 +158,13 @@ class FaseNoite(Fase):
 
             for evento in eventos:
                 if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
-                    self.tentar_abrir_baus()
+                    if self.escada_gerada and pygame.sprite.spritecollideany(self.jogador, self.grupo_escada):
+                        print("Avançando para a próxima fase!!!")
+                        #COLOCAR FUNCAO DE AVANÇAR
+                    else:
+                        self.tentar_abrir_baus()
+                elif evento.type == pygame.KEYDOWN and evento.key == pygame.K_e:
+                    self.ver_mochila()
 
         elif self.estado_fase == "LOTEANDO":
             for evento in eventos:
@@ -155,6 +173,9 @@ class FaseNoite(Fase):
                     if evento.type == pygame.KEYDOWN and evento.key == pygame.K_ESCAPE:
                         self.estado_fase = "EXPLORANDO"
                         self.bau_aberto_atualmente = None
+
+                        self.gerar_escada() # so gera se todos baus foram explorados
+
                     elif evento.key == pygame.K_LEFT or evento.key == pygame.K_RIGHT or evento.key == pygame.K_TAB:
                         self.painel_focado = "MOCHILA" if self.painel_focado == "BAU" else "BAU"
                         self.indice_selecionado = 0  #basicamente o cursor
@@ -163,16 +184,38 @@ class FaseNoite(Fase):
                     elif evento.key == pygame.K_DOWN:
                         lista_atual = self.bau_aberto_atualmente.itens if self.painel_focado == "BAU" else self.jogador.inventario
                         self.indice_selecionado = min(max(0, len(lista_atual) -1), self.indice_selecionado + 1)
-                    elif evento.key == pygame.K_RETURN:
+                    elif evento.key == pygame.K_SPACE:
                         self.transferir_item()
+        elif self.estado_fase == "INVENTARIO":
+            for evento in eventos:
+                if evento.type == pygame.KEYDOWN:
+                    if evento.key == pygame.K_ESCAPE or evento.key == pygame.K_e:
+                        self.estado_fase = "EXPLORANDO"
+                    elif evento.key == pygame.K_UP:
+                        self.indice_selecionado = max(0, self.indice_selecionado - 1)
+                    elif evento.key == pygame.K_DOWN:
+                        if len(self.jogador.inventario) > 0:
+                            self.indice_selecionado = min(len(self.jogador.inventario) - 1, self.indice_selecionado + 1)
 
     def tentar_abrir_baus(self):
         baus_proximos = pygame.sprite.spritecollide(self.jogador, self.grupo_baus, False)
         for bau in baus_proximos:
-            if isinstance(bau, Bau) and not bau.aberto:
-                bau.abrir()
+            if isinstance(bau, Bau):
+                if not bau.aberto:
+                    bau.abrir()
                 self.bau_aberto_atualmente = bau
                 self.estado_fase = "LOTEANDO"
+                self.painel_focado = "BAU"
+                self.indice_selecionado = 0
+                break
+
+    def ver_mochila(self):
+        if self.estado_fase == "EXPLORANDO":
+            self.estado_fase = "INVENTARIO"
+            self.painel_focado = "MOCHILA"
+            self.indice_selecionado = 0
+            self.bau_aberto_atualmente = None
+
 
     def desenhar(self, ecra):
         ecra.fill(self.cor_fundo)
@@ -180,20 +223,21 @@ class FaseNoite(Fase):
 
         if self.estado_fase == "LOTEANDO":
 
-            largura_painel, altura_painel = 600, 450
+            largura_painel, altura_painel = 700, 450
             x_painel = (800 - largura_painel) // 2
             y_painel = (600 - altura_painel) // 2
 
             painel = pygame.Surface((largura_painel, altura_painel))
-            painel.fill((50, 50, 60))
+            painel.fill(COR_FUNDO_PAINEL)
             # borda do painel
-            pygame.draw.rect(painel, (200, 170, 50), painel.get_rect(), width=3)
+            pygame.draw.rect(painel, COR_BORDA_PAINEL, painel.get_rect(), width=3)
 
-            pygame.draw.line(painel, (100,100,110), (300,0), (300, altura_painel),2)
+            meio = largura_painel//2
+            pygame.draw.line(painel, COR_DIVISORIA_PAINEL, (meio,0), (meio, altura_painel),2)
             ecra.blit(painel, (x_painel, y_painel))
 
-            cor_mochila = (255,215,0) if self.painel_focado == "MOCHILA" else (150,150,150)
-            cor_bau = (255, 215, 0) if self.painel_focado == "BAU" else (150, 150, 150)
+            cor_mochila = DOURADO if self.painel_focado == "MOCHILA" else CINZA_INATIVO
+            cor_bau = DOURADO if self.painel_focado == "BAU" else CINZA_INATIVO
 
             txt_mochila = self.fonte_titulo.render(
                 f"Mochila ({self.jogador.carga_atual}/{self.jogador.capacidade_maxima}kg)", True, cor_mochila)
@@ -201,14 +245,14 @@ class FaseNoite(Fase):
                 "Bau", True, cor_bau)
 
             ecra.blit(txt_mochila, (x_painel + 20, y_painel + 20))
-            ecra.blit(txt_bau, (x_painel + 320, y_painel + 20))
+            ecra.blit(txt_bau, (x_painel + meio + 20, y_painel + 20))
 
             for i, item in enumerate(self.jogador.inventario):
                 y_item = y_painel + 80 + (i*35)
                 #cursor
                 if self.painel_focado == "MOCHILA" and i == self.indice_selecionado:
-                    pygame.draw.rect(ecra, (80,80,100), (x_painel + 15, y_item -2, 270, 30))
-                txt_item = self.fonte_texto.render(f"{item.nome} ({item.peso}kg) ${item.valor}", True, (255, 255, 255))
+                    pygame.draw.rect(ecra, COR_CURSOR, (x_painel + 15, y_item -2, 320, 30))
+                txt_item = self.fonte_texto.render(f"{item.nome} ({item.peso}kg) ${item.valor}", True, BRANCO)
                 ecra.blit(txt_item, (x_painel + 20, y_item))
 
             if self.bau_aberto_atualmente:
@@ -216,14 +260,42 @@ class FaseNoite(Fase):
                     y_item = y_painel + 80 + (i * 35)
                     # cursor retangular destacando
                     if self.painel_focado == "BAU" and i == self.indice_selecionado:
-                        pygame.draw.rect(ecra, (80, 80, 100), (x_painel + 315, y_item - 2, 270, 30))
+                        pygame.draw.rect(ecra, COR_CURSOR, (x_painel + meio + 15, y_item - 2, 270, 30))
 
                     txt_item = self.fonte_texto.render(f"{item.nome} ({item.peso}kg) ${item.valor}", True,
-                                                       (255, 255, 255))
-                    ecra.blit(txt_item, (x_painel + 320, y_item))
+                                                       BRANCO)
+                    ecra.blit(txt_item, (x_painel + meio + 20, y_item))
 
-            rodape = self.fonte_texto.render("[SETAS] Navegar | [ENTER] Transferir | [ESC] Fechar", True,(150, 150, 150))
-            ecra.blit(rodape, (x_painel + 20, y_painel + altura_painel - 35))
+            rodape = self.fonte_texto.render("[SETAS] Navegar | [ESPAÇO] Transferir | [ESC] Fechar", True, CINZA_INATIVO)
+            x_rodape = x_painel + (largura_painel-rodape.get_width()) // 2
+            ecra.blit(rodape, (x_rodape, y_painel + altura_painel - 35))
+
+        elif self.estado_fase == "INVENTARIO":
+            largura_painel, altura_painel = 400, 450
+            x_painel = (800 - largura_painel) // 2
+            y_painel = (600 - altura_painel) // 2
+
+            painel = pygame.Surface((largura_painel, altura_painel))
+            painel.fill(COR_FUNDO_PAINEL)
+            pygame.draw.rect(painel, COR_BORDA_PAINEL, painel.get_rect(), width=3)
+            ecra.blit(painel, (x_painel, y_painel))
+
+            txt_mochila = self.fonte_titulo.render(
+                f"Mochila ({self.jogador.carga_atual}/{self.jogador.capacidade_maxima}kg)", True, DOURADO)
+            ecra.blit(txt_mochila, (x_painel + 20, y_painel + 20))
+
+            for i, item in enumerate(self.jogador.inventario):
+                y_item = y_painel + 80 + (i * 35)
+                # fundo do cursor
+                if i == self.indice_selecionado:
+                    pygame.draw.rect(ecra, COR_CURSOR, (x_painel + 15, y_item - 2, 370, 30))
+
+                txt_item = self.fonte_texto.render(f"{item.nome} ({item.peso}kg) ${item.valor}", True, BRANCO)
+                ecra.blit(txt_item, (x_painel + 20, y_item))
+
+            rodape = self.fonte_texto.render("[SETAS] Navegar | [E/ESC] Fechar", True, CINZA_INATIVO)
+            x_rodape = x_painel + (largura_painel - rodape.get_width()) // 2
+            ecra.blit(rodape, (x_rodape, y_painel + altura_painel - 35))
 
     def transferir_item(self):
         if self.painel_focado == "BAU" and len(self.bau_aberto_atualmente.itens) > 0:
@@ -235,10 +307,64 @@ class FaseNoite(Fase):
                 self.jogador.carga_atual += item.peso
                 # ajusta o cursor
                 self.indice_selecionado = max(0, min(self.indice_selecionado, len(self.bau_aberto_atualmente.itens) - 1))
+                self.bau_aberto_atualmente.atualizar_cor()
 
-            elif self.painel_focado == "MOCHILA" and len(self.jogador.inventario) > 0:
-                item = self.jogador.inventario[self.indice_selecionado]
-                self.jogador.inventario.pop(self.indice_selecionado)
-                self.bau_aberto_atualmente.itens.append(item)
-                self.jogador.carga_atual -= item.peso
-                self.indice_selecionado = max(0, min(self.indice_selecionado, len(self.jogador.inventario) - 1))
+        elif self.painel_focado == "MOCHILA" and len(self.jogador.inventario) > 0:
+            item = self.jogador.inventario[self.indice_selecionado]
+            self.jogador.inventario.pop(self.indice_selecionado)
+            self.bau_aberto_atualmente.itens.append(item)
+            self.jogador.carga_atual -= item.peso
+            self.indice_selecionado = max(0, min(self.indice_selecionado, len(self.jogador.inventario) - 1))
+            self.bau_aberto_atualmente.atualizar_cor()
+
+    def gerar_loot_aleatorio(self):
+        #colocar todos os itens do jogo
+        catalogo = [
+            {"nome": "Poção de Vida", "peso": 1, "valor": 20, "chance": 50},
+            {"nome": "Adaga", "peso": 2, "valor": 30, "chance": 40},
+            {"nome": "Capacete de Ferro", "peso": 3, "valor": 40, "chance": 30},
+            {"nome": "Espada Longa", "peso": 5, "valor": 50, "chance": 20},
+            {"nome": "Rubi", "peso": 1, "valor": 100, "chance": 10},
+            {"nome": "Coroa de Ouro", "peso": 3, "valor": 150, "chance": 5}
+            #{"nome": " ", "peso": , "valor": , "chance":},
+            #{"nome": " ", "peso": , "valor": , "chance":},
+            #{"nome": " ", "peso": , "valor": , "chance":}
+        ]
+
+        qtd_itens = random.randint(1, 3)
+        pesos_probabilidade = [item["chance"] for item in catalogo]
+
+        escolhas = random.choices(catalogo, weights=pesos_probabilidade, k=qtd_itens)
+
+        loot = []
+        for escolha in escolhas:
+            novo_item = Item(escolha["nome"], escolha["peso"], escolha["valor"])
+            loot.append(novo_item)
+
+        return loot
+
+    def gerar_escada(self):
+        if self.escada_gerada:
+            return
+        #verifica se ja viu todos os baus
+        todos_abertos = True
+        for bau in self.grupo_baus:
+            if not bau.aberto:
+                todos_abertos = False
+                break
+        if todos_abertos:
+            pisos_livres = []
+            for y in range(LINHAS):
+                for x in range(COLUNAS):
+                    if self.matriz_mapa[y][x] == 0:
+                        pisos_livres.append((x, y))
+
+            if pisos_livres:
+                x_escolhido, y_escolhido = random.choice(pisos_livres)
+
+                # Importa a escada lá no topo do arquivo se necessário: from game.entidades import Escada
+                escada = Escada(x_escolhido * TAMANHO_PISO, y_escolhido * TAMANHO_PISO)
+                self.grupo_sprites.add(escada)
+                self.grupo_escada.add(escada)
+                self.escada_gerada = True
+                print("ESCADA GERADA")
