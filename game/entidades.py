@@ -12,6 +12,10 @@ class Jogador(pygame.sprite.Sprite):
 
         self.paredes = paredes # pra colisao
 
+        self.inventario = []
+        self.carga_atual = 0
+        self.capacidade_maxima = 20
+
     def update(self):
         teclas = pygame.key.get_pressed()
 
