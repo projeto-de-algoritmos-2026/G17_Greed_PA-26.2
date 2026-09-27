@@ -247,24 +247,54 @@ class FaseNoite(Fase):
             ecra.blit(txt_mochila, (x_painel + 20, y_painel + 20))
             ecra.blit(txt_bau, (x_painel + meio + 20, y_painel + 20))
 
-            for i, item in enumerate(self.jogador.inventario):
+            max_itens = 10 # numero de itens que cabem na interface
+            altura_scroll = max_itens*35
+            total_mochila = len(self.jogador.inventario)
+
+            inicio_mochila = max(0, self.indice_selecionado - max_itens + 1) if self.painel_focado == "MOCHILA" else 0
+            itens_visiveis_mochila = self.jogador.inventario[inicio_mochila: inicio_mochila + max_itens]
+
+            for i, item in enumerate(itens_visiveis_mochila):
+                indice_real = inicio_mochila + i
                 y_item = y_painel + 80 + (i*35)
                 #cursor
-                if self.painel_focado == "MOCHILA" and i == self.indice_selecionado:
+                if self.painel_focado == "MOCHILA" and indice_real == self.indice_selecionado:
                     pygame.draw.rect(ecra, COR_CURSOR, (x_painel + 15, y_item -2, 320, 30))
                 txt_item = self.fonte_texto.render(f"{item.nome} ({item.peso}kg) ${item.valor}", True, BRANCO)
                 ecra.blit(txt_item, (x_painel + 20, y_item))
 
+            if total_mochila > max_itens:
+                pygame.draw.rect(ecra, (70,70,80), (x_painel+meio -10, y_painel+80, 4, altura_scroll))
+                tamanho_thumb = max(20, int(altura_scroll * (max_itens / total_mochila)))
+                progresso = inicio_mochila / (total_mochila - max_itens)
+                y_thumb = (y_painel + 80) + int((altura_scroll - tamanho_thumb) * progresso)
+
+                pygame.draw.rect(ecra, DOURADO, (x_painel + meio - 10, y_thumb, 4, tamanho_thumb))
+
             if self.bau_aberto_atualmente:
-                for i, item in enumerate(self.bau_aberto_atualmente.itens):
+                total_bau = len(self.bau_aberto_atualmente.itens)
+                inicio_bau = max(0, self.indice_selecionado - max_itens + 1) if self.painel_focado == "BAU" else 0
+                itens_visiveis_bau = self.bau_aberto_atualmente.itens[inicio_bau: inicio_bau + max_itens]
+
+                for i, item in enumerate(itens_visiveis_bau):
+                    indice_real = inicio_bau + i
                     y_item = y_painel + 80 + (i * 35)
                     # cursor retangular destacando
-                    if self.painel_focado == "BAU" and i == self.indice_selecionado:
-                        pygame.draw.rect(ecra, COR_CURSOR, (x_painel + meio + 15, y_item - 2, 270, 30))
+                    if self.painel_focado == "BAU" and indice_real == self.indice_selecionado:
+                        pygame.draw.rect(ecra, COR_CURSOR, (x_painel + meio + 15, y_item - 2, 320, 30))
 
                     txt_item = self.fonte_texto.render(f"{item.nome} ({item.peso}kg) ${item.valor}", True,
                                                        BRANCO)
                     ecra.blit(txt_item, (x_painel + meio + 20, y_item))
+                if total_bau > max_itens:
+                    pygame.draw.rect(ecra, (70, 70, 80),
+                                     (x_painel + largura_painel - 10, y_painel + 80, 4, altura_scroll))
+
+                    tamanho_thumb = max(20, int(altura_scroll * (max_itens / total_bau)))
+                    progresso = inicio_bau / (total_bau - max_itens)
+                    y_thumb = (y_painel + 80) + int((altura_scroll - tamanho_thumb) * progresso)
+
+                    pygame.draw.rect(ecra, DOURADO, (x_painel + largura_painel - 10, y_thumb, 4, tamanho_thumb))
 
             rodape = self.fonte_texto.render("[SETAS] Navegar | [ESPAÇO] Transferir | [ESC] Fechar", True, CINZA_INATIVO)
             x_rodape = x_painel + (largura_painel-rodape.get_width()) // 2

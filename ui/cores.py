@@ -15,8 +15,10 @@ COR_BAU = (218, 165, 32)
 
 # Cinza do bau aberto
 CINZA_BAU_ABERTO = (139, 69, 19)
-# Azul
-AZUL_ESCADA = (60, 60, 55)
+# Cinza marrom esverdeado sla
+COR_BAU_VAZIO = (73,74,51)
+# Cinza médio
+ESCADA = ((150, 150, 150))
 # Cinza escuro
 CINZA_PAREDE = (80, 80, 80)
 

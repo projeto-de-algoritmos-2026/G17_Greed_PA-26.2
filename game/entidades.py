@@ -2,17 +2,17 @@
 import pygame
 from config import *
 from ui.cores import (
-    AZUL_ESCADA,
+    ESCADA,
     CINZA_BAU_ABERTO,
     CINZA_PAREDE,
     COR_BAU,
-    COR_JOGADOR, DOURADO,
+    COR_JOGADOR, DOURADO, COR_BAU_VAZIO, CINZA_INATIVO,
 )
 
 class Jogador(pygame.sprite.Sprite):
     def __init__(self, x, y, paredes):
         super().__init__()
-        self.image = pygame.Surface((TAMANHO_PISO-0.25*TAMANHO_PISO, TAMANHO_PISO-0.25*TAMANHO_PISO))
+        self.image = pygame.Surface((0.75*TAMANHO_PISO, 0.75*TAMANHO_PISO))
         self.image.fill(COR_JOGADOR)
         self.rect = self.image.get_rect(topleft=(x+5,y+5)) # colisao
 
@@ -63,7 +63,7 @@ class Bau(pygame.sprite.Sprite):
         self.itens = itens if itens else[] # operador ternário
         self.aberto = False
         self.som_abrir = pygame.mixer.Sound("assets/sons/bau.mpeg")
-        self.som_abrir.set_volume(0.1)
+        self.som_abrir.set_volume(0.15)
 
     def abrir(self):
         self.aberto = True
@@ -76,15 +76,15 @@ class Bau(pygame.sprite.Sprite):
         if not self.aberto:
             self.image.fill(DOURADO)
         elif len(self.itens) > 0:
-            self.image.fill(COR_BAU)
-        else:
             self.image.fill(CINZA_BAU_ABERTO)
+        else:
+            self.image.fill(COR_BAU_VAZIO)
 
 class Escada(pygame.sprite.Sprite):
     def __init__(self,x,y):
         super().__init__()
         self.image = pygame.Surface((TAMANHO_PISO, TAMANHO_PISO))
-        self.image.fill(AZUL_ESCADA)
+        self.image.fill(CINZA_INATIVO)
         self.rect = self.image.get_rect(topleft=(x, y))
 
 

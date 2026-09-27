@@ -11,7 +11,7 @@ class Fase:
 
     def tocar_musica(self):
         pygame.mixer.music.load(self.musica_ambiente)
-        pygame.mixer.music.set_volume(0.6)
+        pygame.mixer.music.set_volume(0.5)
         pygame.mixer.music.play(-1)
 
     def atualizar(self, eventos):
