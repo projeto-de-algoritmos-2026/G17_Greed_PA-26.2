@@ -1,7 +1,7 @@
 import pygame
 import random
 from game.fases.fase import Fase
-from game.entidades import Jogador, Parede, Bau, Item, Escada
+from game.entidades import Jogador, Parede, Bau, Item, Escada, Piso
 from ui.cores import (
     BRANCO,
     CINZA_INATIVO,
@@ -12,8 +12,7 @@ from ui.cores import (
     COR_FUNDO_PAINEL,
     DOURADO,
 )
-from config import TAMANHO_PISO, COLUNAS, LINHAS
-
+from config import TAMANHO_PISO, COLUNAS, LINHAS, LARGURA_VIRTUAL, ALTURA_VIRTUAL
 
 
 class celulaBSP:
@@ -27,12 +26,10 @@ class celulaBSP:
         self.sala = None
 
     def dividir(self, iteracoes):
-        #se a área for menor que 7, vira sala imediatamente.
-        # quanto menor o numero mais salas. se diminui muito pode quebrar
-        # e tem que alterar outros parametros ao longo da funcao dividir
-        if iteracoes == 0 or self.largura < 7 or self.altura < 7:
-            w = random.randint(3, max(3, self.largura - 2))
-            h = random.randint(3, max(3, self.altura - 2))
+        # se a área for menor que esse valor(altura ou largura), vira sala imediatamente.
+        if iteracoes == 0 or self.largura < 8 or self.altura < 8:
+            w = random.randint(4, max(4, self.largura - 2))
+            h = random.randint(4, max(4, self.altura - 2))
 
             px = self.x + random.randint(1, max(1, self.largura - w - 1))
             py = self.y + random.randint(1, max(1, self.altura - h - 1))
@@ -40,20 +37,19 @@ class celulaBSP:
             self.sala = pygame.Rect(px, py, w, h)
             return
 
-            # Tenta cortar no eixo mais longo, mas exige um mínimo de 8 blocos para agir
+
         cortou = False
-        if self.largura >= 7 and self.largura >= self.altura:
+        if self.largura >= 10 and self.largura >= self.altura:
             corte = random.randint(4, self.largura - 4)
             self.esq = celulaBSP(self.x, self.y, corte, self.altura)
             self.dir = celulaBSP(self.x + corte, self.y, self.largura - corte, self.altura)
             cortou = True
-        elif self.altura >= 7:
+        elif self.altura >= 10:
             corte = random.randint(4, self.altura - 4)
             self.esq = celulaBSP(self.x, self.y, self.largura, corte)
             self.dir = celulaBSP(self.x, self.y + corte, self.largura, self.altura - corte)
             cortou = True
 
-        # Se conseguiu cortar, prossegue com os filhos. Se falhou, força a criação da sala (iteracoes=0)
         if cortou:
             self.esq.dividir(iteracoes - 1)
             self.dir.dividir(iteracoes - 1)
@@ -64,7 +60,8 @@ class celulaBSP:
         if self.sala is not None:
             for i in range(self.sala.top, self.sala.bottom):
                 for j in range(self.sala.left, self.sala.right):
-                    matriz[i][j] = 0
+                    if 0 < i < LINHAS - 1 and 0 < j < COLUNAS - 1:
+                        matriz[i][j] = 0
 
         elif self.esq is not None and self.dir is not None:
             self.esq.aplicar_matriz(matriz)
@@ -78,10 +75,17 @@ class celulaBSP:
             inicio_y = int(min(y1, y2))
             fim_y = int(max(y1, y2))
 
+            largura_corredor = random.randint(1, 2)
+
             for i in range(inicio_x, fim_x + 1):
-                matriz[y1][i] = 0
+                for w in range(largura_corredor):
+                    if 0 < y1 + w < LINHAS - 1 and 0 < i < COLUNAS - 1:
+                        matriz[y1 + w][i] = 0
+
             for i in range(inicio_y, fim_y + 1):
-                matriz[i][x2] = 0
+                for w in range(largura_corredor):
+                    if 0 < i < LINHAS - 1 and 0 < x2 + w < COLUNAS - 1:
+                        matriz[i][x2 + w] = 0
 
     def centro(self) -> tuple[int, int]:
         if self.sala is not None:
@@ -104,12 +108,11 @@ class celulaBSP:
 class FaseNoite(Fase):
     def __init__(self):
         super().__init__(cor_fundo=COR_FUNDO_MASMORRA, musica='assets/sons/masmorra.mp3')
-        self.fonte_titulo = pygame.font.Font('assets/fonts/DigitalDisco.ttf', 32)
-        self.fonte_texto = pygame.font.Font('assets/fonts/DigitalDisco.ttf', 24)
+        self.fonte_titulo = pygame.font.Font('assets/fonts/DigitalDisco.ttf', 20)
+        self.fonte_texto = pygame.font.Font('assets/fonts/DigitalDisco.ttf', 14)
 
         self.grupo_baus = pygame.sprite.Group()
         self.grupo_paredes = pygame.sprite.Group()
-
 
         self.estado_fase = "EXPLORANDO"
         self.bau_aberto_atualmente = None
@@ -120,7 +123,7 @@ class FaseNoite(Fase):
         self.matriz_mapa = [[1 for _ in range(COLUNAS)] for _ in range(LINHAS)]
 
         arvore = celulaBSP(0, 0, COLUNAS, LINHAS)
-        arvore.dividir(3)
+        arvore.dividir(4)
         arvore.aplicar_matriz(self.matriz_mapa)
 
         self.salas_geradas = arvore.obter_salas()
@@ -135,8 +138,12 @@ class FaseNoite(Fase):
                 pos_x = x * TAMANHO_PISO
                 pos_y = y * TAMANHO_PISO
 
-                if valor == 1:
-                    parede = Parede(pos_x, pos_y)
+                if valor == 0:
+                    piso = Piso(pos_x, pos_y)
+                    self.grupo_sprites.add(piso)
+
+                elif valor == 1:
+                    parede = Parede(pos_x, pos_y, x, y, self.matriz_mapa)
                     self.grupo_sprites.add(parede)
                     self.grupo_paredes.add(parede)
 
@@ -160,7 +167,6 @@ class FaseNoite(Fase):
                 if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
                     if self.escada_gerada and pygame.sprite.spritecollideany(self.jogador, self.grupo_escada):
                         print("Avançando para a próxima fase!!!")
-                        #COLOCAR FUNCAO DE AVANÇAR
                     else:
                         self.tentar_abrir_baus()
                 elif evento.type == pygame.KEYDOWN and evento.key == pygame.K_e:
@@ -168,24 +174,23 @@ class FaseNoite(Fase):
 
         elif self.estado_fase == "LOTEANDO":
             for evento in eventos:
-                #  ESC sai da tela do bau
                 if evento.type == pygame.KEYDOWN:
-                    if evento.type == pygame.KEYDOWN and evento.key == pygame.K_ESCAPE:
+                    if evento.key == pygame.K_ESCAPE:
                         self.estado_fase = "EXPLORANDO"
                         self.bau_aberto_atualmente = None
-
-                        self.gerar_escada() # so gera se todos baus foram explorados
+                        self.gerar_escada()
 
                     elif evento.key == pygame.K_LEFT or evento.key == pygame.K_RIGHT or evento.key == pygame.K_TAB:
                         self.painel_focado = "MOCHILA" if self.painel_focado == "BAU" else "BAU"
-                        self.indice_selecionado = 0  #basicamente o cursor
+                        self.indice_selecionado = 0
                     elif evento.key == pygame.K_UP:
                         self.indice_selecionado = max(0, self.indice_selecionado - 1)
                     elif evento.key == pygame.K_DOWN:
                         lista_atual = self.bau_aberto_atualmente.itens if self.painel_focado == "BAU" else self.jogador.inventario
-                        self.indice_selecionado = min(max(0, len(lista_atual) -1), self.indice_selecionado + 1)
+                        self.indice_selecionado = min(max(0, len(lista_atual) - 1), self.indice_selecionado + 1)
                     elif evento.key == pygame.K_SPACE:
                         self.transferir_item()
+
         elif self.estado_fase == "INVENTARIO":
             for evento in eventos:
                 if evento.type == pygame.KEYDOWN:
@@ -216,24 +221,21 @@ class FaseNoite(Fase):
             self.indice_selecionado = 0
             self.bau_aberto_atualmente = None
 
-
     def desenhar(self, ecra):
         ecra.fill(self.cor_fundo)
         self.grupo_sprites.draw(ecra)
 
         if self.estado_fase == "LOTEANDO":
-
-            largura_painel, altura_painel = 700, 450
-            x_painel = (800 - largura_painel) // 2
-            y_painel = (600 - altura_painel) // 2
+            largura_painel, altura_painel = 500, 260
+            x_painel = (LARGURA_VIRTUAL - largura_painel) // 2
+            y_painel = (ALTURA_VIRTUAL - altura_painel) // 2
 
             painel = pygame.Surface((largura_painel, altura_painel))
             painel.fill(COR_FUNDO_PAINEL)
-            # borda do painel
-            pygame.draw.rect(painel, COR_BORDA_PAINEL, painel.get_rect(), width=3)
+            pygame.draw.rect(painel, COR_BORDA_PAINEL, painel.get_rect(), width=2)
 
-            meio = largura_painel//2
-            pygame.draw.line(painel, COR_DIVISORIA_PAINEL, (meio,0), (meio, altura_painel),2)
+            meio = largura_painel // 2
+            pygame.draw.line(painel, COR_DIVISORIA_PAINEL, (meio, 0), (meio, altura_painel), 2)
             ecra.blit(painel, (x_painel, y_painel))
 
             cor_mochila = DOURADO if self.painel_focado == "MOCHILA" else CINZA_INATIVO
@@ -241,14 +243,13 @@ class FaseNoite(Fase):
 
             txt_mochila = self.fonte_titulo.render(
                 f"Mochila ({self.jogador.carga_atual}/{self.jogador.capacidade_maxima}kg)", True, cor_mochila)
-            txt_bau = self.fonte_titulo.render(
-                "Bau", True, cor_bau)
+            txt_bau = self.fonte_titulo.render("Bau", True, cor_bau)
 
-            ecra.blit(txt_mochila, (x_painel + 20, y_painel + 20))
-            ecra.blit(txt_bau, (x_painel + meio + 20, y_painel + 20))
+            ecra.blit(txt_mochila, (x_painel + 20, y_painel + 10))
+            ecra.blit(txt_bau, (x_painel + meio + 20, y_painel + 10))
 
-            max_itens = 10 # numero de itens que cabem na interface
-            altura_scroll = max_itens*35
+            max_itens = 8
+            altura_scroll = max_itens * 20
             total_mochila = len(self.jogador.inventario)
 
             inicio_mochila = max(0, self.indice_selecionado - max_itens + 1) if self.painel_focado == "MOCHILA" else 0
@@ -256,19 +257,19 @@ class FaseNoite(Fase):
 
             for i, item in enumerate(itens_visiveis_mochila):
                 indice_real = inicio_mochila + i
-                y_item = y_painel + 80 + (i*35)
-                #cursor
+                y_item = y_painel + 45 + (i * 20)
+
                 if self.painel_focado == "MOCHILA" and indice_real == self.indice_selecionado:
-                    pygame.draw.rect(ecra, COR_CURSOR, (x_painel + 15, y_item -2, 320, 30))
+                    pygame.draw.rect(ecra, COR_CURSOR, (x_painel + 15, y_item - 2, meio - 30, 18))
+
                 txt_item = self.fonte_texto.render(f"{item.nome} ({item.peso}kg) ${item.valor}", True, BRANCO)
                 ecra.blit(txt_item, (x_painel + 20, y_item))
 
             if total_mochila > max_itens:
-                pygame.draw.rect(ecra, (70,70,80), (x_painel+meio -10, y_painel+80, 4, altura_scroll))
+                pygame.draw.rect(ecra, (70, 70, 80), (x_painel + meio - 10, y_painel + 45, 4, altura_scroll))
                 tamanho_thumb = max(20, int(altura_scroll * (max_itens / total_mochila)))
                 progresso = inicio_mochila / (total_mochila - max_itens)
-                y_thumb = (y_painel + 80) + int((altura_scroll - tamanho_thumb) * progresso)
-
+                y_thumb = (y_painel + 45) + int((altura_scroll - tamanho_thumb) * progresso)
                 pygame.draw.rect(ecra, DOURADO, (x_painel + meio - 10, y_thumb, 4, tamanho_thumb))
 
             if self.bau_aberto_atualmente:
@@ -278,32 +279,31 @@ class FaseNoite(Fase):
 
                 for i, item in enumerate(itens_visiveis_bau):
                     indice_real = inicio_bau + i
-                    y_item = y_painel + 80 + (i * 35)
-                    # cursor retangular destacando
-                    if self.painel_focado == "BAU" and indice_real == self.indice_selecionado:
-                        pygame.draw.rect(ecra, COR_CURSOR, (x_painel + meio + 15, y_item - 2, 320, 30))
+                    y_item = y_painel + 45 + (i * 20)
 
-                    txt_item = self.fonte_texto.render(f"{item.nome} ({item.peso}kg) ${item.valor}", True,
-                                                       BRANCO)
+                    if self.painel_focado == "BAU" and indice_real == self.indice_selecionado:
+                        pygame.draw.rect(ecra, COR_CURSOR, (x_painel + meio + 15, y_item - 2, meio - 30, 18))
+
+                    txt_item = self.fonte_texto.render(f"{item.nome} ({item.peso}kg) ${item.valor}", True, BRANCO)
                     ecra.blit(txt_item, (x_painel + meio + 20, y_item))
+
                 if total_bau > max_itens:
                     pygame.draw.rect(ecra, (70, 70, 80),
-                                     (x_painel + largura_painel - 10, y_painel + 80, 4, altura_scroll))
-
+                                     (x_painel + largura_painel - 10, y_painel + 45, 4, altura_scroll))
                     tamanho_thumb = max(20, int(altura_scroll * (max_itens / total_bau)))
                     progresso = inicio_bau / (total_bau - max_itens)
-                    y_thumb = (y_painel + 80) + int((altura_scroll - tamanho_thumb) * progresso)
-
+                    y_thumb = (y_painel + 45) + int((altura_scroll - tamanho_thumb) * progresso)
                     pygame.draw.rect(ecra, DOURADO, (x_painel + largura_painel - 10, y_thumb, 4, tamanho_thumb))
 
-            rodape = self.fonte_texto.render("[SETAS] Navegar | [ESPAÇO] Transferir | [ESC] Fechar", True, CINZA_INATIVO)
-            x_rodape = x_painel + (largura_painel-rodape.get_width()) // 2
-            ecra.blit(rodape, (x_rodape, y_painel + altura_painel - 35))
+            rodape = self.fonte_texto.render("[SETAS] Navegar | [ESPAÇO] Transferir | [ESC] Fechar", True,
+                                             CINZA_INATIVO)
+            x_rodape = x_painel + (largura_painel - rodape.get_width()) // 2
+            ecra.blit(rodape, (x_rodape, y_painel + altura_painel - 25))
 
         elif self.estado_fase == "INVENTARIO":
-            largura_painel, altura_painel = 400, 450
-            x_painel = (800 - largura_painel) // 2
-            y_painel = (600 - altura_painel) // 2
+            largura_painel, altura_painel = 300, 260
+            x_painel = (LARGURA_VIRTUAL - largura_painel) // 2
+            y_painel = (ALTURA_VIRTUAL - altura_painel) // 2
 
             painel = pygame.Surface((largura_painel, altura_painel))
             painel.fill(COR_FUNDO_PAINEL)
@@ -312,20 +312,25 @@ class FaseNoite(Fase):
 
             txt_mochila = self.fonte_titulo.render(
                 f"Mochila ({self.jogador.carga_atual}/{self.jogador.capacidade_maxima}kg)", True, DOURADO)
-            ecra.blit(txt_mochila, (x_painel + 20, y_painel + 20))
+            ecra.blit(txt_mochila, (x_painel + 20, y_painel + 10))
 
-            for i, item in enumerate(self.jogador.inventario):
-                y_item = y_painel + 80 + (i * 35)
-                # fundo do cursor
-                if i == self.indice_selecionado:
-                    pygame.draw.rect(ecra, COR_CURSOR, (x_painel + 15, y_item - 2, 370, 30))
+            max_itens = 8
+            inicio_mochila = max(0, self.indice_selecionado - max_itens + 1)
+            itens_visiveis = self.jogador.inventario[inicio_mochila: inicio_mochila + max_itens]
+
+            for i, item in enumerate(itens_visiveis):
+                y_item = y_painel + 45 + (i * 20)
+                indice_real = inicio_mochila + i
+
+                if indice_real == self.indice_selecionado:
+                    pygame.draw.rect(ecra, COR_CURSOR, (x_painel + 15, y_item - 2, 270, 18))
 
                 txt_item = self.fonte_texto.render(f"{item.nome} ({item.peso}kg) ${item.valor}", True, BRANCO)
                 ecra.blit(txt_item, (x_painel + 20, y_item))
 
             rodape = self.fonte_texto.render("[SETAS] Navegar | [E/ESC] Fechar", True, CINZA_INATIVO)
             x_rodape = x_painel + (largura_painel - rodape.get_width()) // 2
-            ecra.blit(rodape, (x_rodape, y_painel + altura_painel - 35))
+            ecra.blit(rodape, (x_rodape, y_painel + altura_painel - 25))
 
     def transferir_item(self):
         if self.painel_focado == "BAU" and len(self.bau_aberto_atualmente.itens) > 0:
@@ -335,8 +340,8 @@ class FaseNoite(Fase):
                 self.bau_aberto_atualmente.itens.pop(self.indice_selecionado)
                 self.jogador.inventario.append(item)
                 self.jogador.carga_atual += item.peso
-                # ajusta o cursor
-                self.indice_selecionado = max(0, min(self.indice_selecionado, len(self.bau_aberto_atualmente.itens) - 1))
+                self.indice_selecionado = max(0,
+                                              min(self.indice_selecionado, len(self.bau_aberto_atualmente.itens) - 1))
                 self.bau_aberto_atualmente.atualizar_cor()
 
         elif self.painel_focado == "MOCHILA" and len(self.jogador.inventario) > 0:
@@ -348,7 +353,6 @@ class FaseNoite(Fase):
             self.bau_aberto_atualmente.atualizar_cor()
 
     def gerar_loot_aleatorio(self):
-        #colocar todos os itens do jogo
         catalogo = [
             {"nome": "Poção de Vida", "peso": 1, "valor": 20, "chance": 50},
             {"nome": "Adaga", "peso": 2, "valor": 30, "chance": 40},
@@ -356,9 +360,6 @@ class FaseNoite(Fase):
             {"nome": "Espada Longa", "peso": 5, "valor": 50, "chance": 20},
             {"nome": "Rubi", "peso": 1, "valor": 100, "chance": 10},
             {"nome": "Coroa de Ouro", "peso": 3, "valor": 150, "chance": 5}
-            #{"nome": " ", "peso": , "valor": , "chance":},
-            #{"nome": " ", "peso": , "valor": , "chance":},
-            #{"nome": " ", "peso": , "valor": , "chance":}
         ]
 
         qtd_itens = random.randint(1, 3)
@@ -376,12 +377,13 @@ class FaseNoite(Fase):
     def gerar_escada(self):
         if self.escada_gerada:
             return
-        #verifica se ja viu todos os baus
+
         todos_abertos = True
         for bau in self.grupo_baus:
             if not bau.aberto:
                 todos_abertos = False
                 break
+
         if todos_abertos:
             pisos_livres = []
             for y in range(LINHAS):
@@ -391,8 +393,6 @@ class FaseNoite(Fase):
 
             if pisos_livres:
                 x_escolhido, y_escolhido = random.choice(pisos_livres)
-
-                # Importa a escada lá no topo do arquivo se necessário: from game.entidades import Escada
                 escada = Escada(x_escolhido * TAMANHO_PISO, y_escolhido * TAMANHO_PISO)
                 self.grupo_sprites.add(escada)
                 self.grupo_escada.add(escada)

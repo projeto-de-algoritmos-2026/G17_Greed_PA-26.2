@@ -12,8 +12,10 @@ async def main():
     pygame.init()
     pygame.mixer.init()
 
-    ecra = pygame.display.set_mode((LARGURA, ALTURA))
+    ecra_real = pygame.display.set_mode((LARGURA, ALTURA))
     pygame.display.set_caption("Nightfall Looter")
+
+    ecra_virtual = pygame.Surface((LARGURA_VIRTUAL, ALTURA_VIRTUAL))
     relogio = pygame.time.Clock()
 
 #   fases = {
@@ -37,7 +39,11 @@ async def main():
 
 
         fase_atual.atualizar(eventos)
-        fase_atual.desenhar(ecra)
+        #desenha tudo na tela menor para os sprites 16 16
+        fase_atual.desenhar(ecra_virtual)
+
+        ecra_esticado = pygame.transform.scale(ecra_virtual, (LARGURA, ALTURA))
+        ecra_real.blit(ecra_esticado, (0, 0))
 
         pygame.display.flip()
         relogio.tick(FPS)
