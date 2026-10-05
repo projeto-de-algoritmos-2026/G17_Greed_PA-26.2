@@ -12,17 +12,21 @@
 
 ## Sobre
 
-**Nightfall Looter** é um jogo 2D desenvolvido para aplicar, na prática, algoritmos clássicos de otimização em um ciclo de gameplay dia/noite:
-### Escopo Principal
-- 🌙 **Noite** — o personagem invade masmorras e castelos abandonados, saqueando baús e decidindo o que carregar na mochila usando o algoritmo da **Mochila (Knapsack)**.
-- ☀️ **Dia** — com o loot em mãos, o personagem viaja entre cidades para vender seus itens, com a rota calculada pelo **Algoritmo do Caminhoneiro**.
-### Escopo Opcional
-- 🏪 **Cidade** *(bônus)* — os itens são vendidos ao melhor preço possível entre as cidades visitadas, usando um algoritmo de **Compra e Venda Ótima (CMP)**.
-- 📜 **Pergaminhos** *(bônus)* — itens especiais encontrados na masmorra são codificados com **Huffman** e precisam ser decodificados antes da venda.
+**Nightfall Looter** é um jogo 2D educativo sobre **algoritmos gulosos**. O jogador alterna entre duas fases, quantas vezes quiser:
 
-- Atualmente Implementados: Knapsack & Algoritmo do Caminhoneiro
+- 🌙 **Masmorra** — explore as salas, abra os baús e escolha o que levar. A mochila tem limite de peso e, acima da capacidade, o personagem anda mais devagar.
+- 🏪 **Mercador** — venda o que trouxe, compre melhorias (mochila maior, sorte, decifrador de pergaminhos) e decida se desce mais um andar ou encerra o jogo.
 
-**Em breve: CMP (Compra e Venda) e Huffman...**
+Entre uma fase e outra, o jogo compara a sua mochila com a que o algoritmo guloso montaria e paga um bônus de ouro conforme o quão perto você chegou.
+
+### Algoritmos implementados
+
+| Algoritmo | Onde aparece no jogo | Arquivo |
+|---|---|---|
+| **Mochila gulosa (Knapsack 0/1)** | Tela de resultado: ordena os itens do andar por valor/peso e pega o que couber. Com itens inteiros o guloso nem sempre é ótimo — dá para ganhar dele! | `algoritmos/knapsack.py` |
+| **Mochila fracionária** | Tela de resultado: mostra o "teto" de valor, caso em que o guloso é sempre ótimo. Itens a granel (pó, elixir) podem ser levados aos poucos, 1kg por vez. | `algoritmos/knapsack.py` |
+| **Troco (moedas)** | O mercador paga suas vendas com o menor número de moedas; nas compras, quem paga com o menor número de moedas ganha desconto. | `algoritmos/troco.py` |
+| **Código de Huffman** | Pergaminhos encontrados nos baús estão codificados. O Decifrador lê sozinho; sem ele, o jogador decodifica os bits usando a tabela. | `algoritmos/huffman.py` |
 
 ## Instalação
 
@@ -57,7 +61,7 @@ git clone https://github.com/projeto-de-algoritmos-2026/G17_Greed_PA-26.2
 
 **2. Entre na pasta do projeto e crie o ambiente virtual (venv):**
 ```bash
-cd nightfall-looter
+cd G17_Greed_PA-26.2
 
 python -m venv venv
 ```
@@ -87,9 +91,28 @@ python main.py
 ```
 
 **2. Jogue:**
-- Durante a **noite**, explore a masmorra e abra os baús — o jogo sugere a combinação ótima de itens para levar na mochila.
-- Ao amanhecer, visualize o **mapa** e a rota calculada até as cidades vizinhas.
-- Nas **cidades**, venda seu loot e, se tiver pergaminhos, decodifique-os antes de negociar.
+- Na **masmorra**, abra todos os baús para a escada aparecer e desça por ela.
+- Na tela de **resultado**, veja como a sua mochila se saiu contra o algoritmo guloso.
+- No **mercador**, venda, compre melhorias, decifre pergaminhos e escolha entre continuar ou encerrar.
+
+**Controles** (a tecla `F1` mostra esta lista dentro do jogo):
+
+| Tecla | Ação |
+|---|---|
+| Setas / WASD | mover e navegar nos menus |
+| Espaço | abrir baú, transferir item, usar escada |
+| Enter | confirmar |
+| E | abrir a mochila |
+| Tab | trocar entre mochila e baú |
+| Backspace | apagar (moeda ou letra) |
+| Esc | fechar painel / voltar |
+| F1 | controles |
+| F11 | tela cheia |
+
+**3. Testes dos algoritmos:**
+```bash
+pytest
+```
 
 ## Outros
 

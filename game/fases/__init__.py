@@ -1,11 +1,15 @@
-#from game.fases.menu import Menu
-from game.fases.fase_noite import FaseNoite
-#from game.fases.fase_dia import FaseDia
-#from game.fases.fase_cidade import FaseCidade
-#from game.fases.fim import Fim
+from game.estado import EstadoJogo
+from game.fases.menu import Menu
+from game.fases.fase_masmorra import FaseMasmorra
+from game.fases.resultado import Resultado
+from game.fases.fase_mercador import FaseMercador
+from game.fases.fim import Fim
 
-#menu = Menu
-fase_noite = FaseNoite
-#fase_dia = FaseDia
-#fase_cidade = FaseCidade
-#fim = Fim
+# Qual classe cuida de cada estado do jogo
+FASES = {
+    EstadoJogo.MENU: Menu,
+    EstadoJogo.MASMORRA: FaseMasmorra,
+    EstadoJogo.RESULTADO: Resultado,
+    EstadoJogo.MERCADOR: FaseMercador,
+    EstadoJogo.FIM: Fim,
+}
