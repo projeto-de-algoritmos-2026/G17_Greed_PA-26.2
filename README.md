@@ -19,6 +19,7 @@
 
 Entre uma fase e outra, o jogo compara a sua mochila com a que o algoritmo guloso montaria e paga um bônus de ouro conforme o quão perto você chegou — com um extra para quem consegue ganhar dele.
 
+12 ITENS DIFERENTES E 4 TIPOS DE PERGAMINHOS! 
 ### Algoritmos implementados
 
 | Algoritmo | Onde aparece no jogo | Arquivo |
@@ -91,6 +92,7 @@ python main.py
 ```
 
 **2. Jogue:**
+#### Fase Tutorial
 - Na **masmorra**, abra todos os baús para a escada aparecer e desça por ela.
 - Na tela de **resultado**, veja como a sua mochila se saiu contra o algoritmo guloso.
 - No **mercador**, venda, compre melhorias, decifre pergaminhos e escolha entre continuar ou encerrar.
