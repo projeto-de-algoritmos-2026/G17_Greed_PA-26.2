@@ -1,18 +1,46 @@
 #dimensoes
 
+# janela (o que aparece no monitor)
 LARGURA = 800
 ALTURA = 600
 FPS = 60
 
+# tela virtual (onde o jogo é desenhado antes de ser esticado para a janela)
 LARGURA_VIRTUAL = 640
-ALTURA_VIRTUAL = 480
+ALTURA_VIRTUAL = 360
 
 TAMANHO_PISO = 16
 
-#testando 768x576 para 32
-COLUNAS = LARGURA_VIRTUAL // TAMANHO_PISO   #800//40 = 20  ou # 640//32 = 20   //640
-LINHAS = ALTURA_VIRTUAL // TAMANHO_PISO    #600//40 = 15  ou # 448//32 = 14   //360
+COLUNAS = LARGURA_VIRTUAL // TAMANHO_PISO   # 640//16 = 40
+LINHAS = ALTURA_VIRTUAL // TAMANHO_PISO     # 360//16 = 22 (sobram 8px embaixo)
+
+FONTE = 'assets/fonts/DigitalDisco.ttf'
+
 #gameplay
 
-VELOCIDADE_JOGADOR = TAMANHO_PISO/8 #pixel por frame
+VELOCIDADE_JOGADOR = TAMANHO_PISO // 8  #pixel por frame
+VELOCIDADE_LENTA = VELOCIDADE_JOGADOR // 2
 
+CAPACIDADE_INICIAL = 20  # kg que o jogador carrega sem ficar lento
+FATOR_SOBRECARGA = 1.5   # até capacidade x 1.5 ele ainda carrega, mas anda lento
+
+CHANCE_PERGAMINHO = 25   # % de chance de um baú ter um pergaminho
+
+#resultado
+
+BONUS_MAXIMO_OURO = 50      # bônus de quem empata com o guloso
+BONUS_VENCEU_GULOSO = 30    # bônus extra de quem ganha do guloso
+
+#mercador
+
+MOEDAS = [100, 50, 25, 10, 5, 1]
+
+KG_POR_COMPRA = 5
+PRECO_MOCHILA = 65       # multiplicado por (compras já feitas + 1)
+PRECO_SORTE = 90         # multiplicado por (nível atual + 1)
+PRECO_DECIFRADOR = 45    # multiplicado por (nível atual + 1)
+
+NIVEL_MAXIMO_SORTE = 3
+NIVEL_MAXIMO_DECIFRADOR = 4
+
+DESCONTO_TROCO = 0.10    # desconto de quem paga com o menor número de moedas
