@@ -13,3 +13,5 @@ htmlcov/
 __pycache__/
 game/__pycache__/
 ui/__pycache__/
+
+PLANO.md

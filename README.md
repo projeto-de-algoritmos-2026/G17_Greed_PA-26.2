@@ -14,10 +14,10 @@
 
 **Nightfall Looter** é um jogo 2D educativo sobre **algoritmos gulosos**. O jogador alterna entre duas fases, quantas vezes quiser:
 
-- 🌙 **Masmorra** — explore as salas, abra os baús e escolha o que levar. A mochila tem limite de peso e, acima da capacidade, o personagem anda mais devagar.
-- 🏪 **Mercador** — venda o que trouxe, compre melhorias (mochila maior, sorte, decifrador de pergaminhos) e decida se desce mais um andar ou encerra o jogo.
+- 🌙 **Masmorra** — explore as salas, abra os baús e escolha o que levar. A mochila tem limite de peso: acima da capacidade o personagem anda mais devagar, e ela não aceita mais nada ao chegar a 1,5x a capacidade.
+- 🏪 **Mercador** — venda o que trouxe, compre melhorias (mochila maior, amuleto da sorte, decifrador de pergaminhos), decifre pergaminhos e decida se desce mais um andar ou encerra o jogo. O que não for vendido continua na mochila.
 
-Entre uma fase e outra, o jogo compara a sua mochila com a que o algoritmo guloso montaria e paga um bônus de ouro conforme o quão perto você chegou.
+Entre uma fase e outra, o jogo compara a sua mochila com a que o algoritmo guloso montaria e paga um bônus de ouro conforme o quão perto você chegou — com um extra para quem consegue ganhar dele.
 
 ### Algoritmos implementados
 
@@ -25,8 +25,8 @@ Entre uma fase e outra, o jogo compara a sua mochila com a que o algoritmo gulos
 |---|---|---|
 | **Mochila gulosa (Knapsack 0/1)** | Tela de resultado: ordena os itens do andar por valor/peso e pega o que couber. Com itens inteiros o guloso nem sempre é ótimo — dá para ganhar dele! | `algoritmos/knapsack.py` |
 | **Mochila fracionária** | Tela de resultado: mostra o "teto" de valor, caso em que o guloso é sempre ótimo. Itens a granel (pó, elixir) podem ser levados aos poucos, 1kg por vez. | `algoritmos/knapsack.py` |
-| **Troco (moedas)** | O mercador paga suas vendas com o menor número de moedas; nas compras, quem paga com o menor número de moedas ganha desconto. | `algoritmos/troco.py` |
-| **Código de Huffman** | Pergaminhos encontrados nos baús estão codificados. O Decifrador lê sozinho; sem ele, o jogador decodifica os bits usando a tabela. | `algoritmos/huffman.py` |
+| **Troco (moedas)** | O mercador paga suas vendas com o menor número de moedas; nas compras, quem paga com o menor número de moedas ganha 10% de desconto. | `algoritmos/troco.py` |
+| **Código de Huffman** | Pergaminhos encontrados nos baús estão codificados. O Decifrador lê sozinho os pergaminhos até a raridade do seu nível; acima disso, o jogador decodifica os bits usando a tabela e tem uma única chance — se errar, o pergaminho passa a valer metade. | `algoritmos/huffman.py` |
 
 ## Instalação
 
@@ -121,7 +121,7 @@ pytest
 Para garantir um desenvolvimento ágil, com foco total na lógica dos algoritmos, adotamos uma stack enxuta, sem framework e sem comunicação via API — o projeto é um **monolito local**, rodando inteiramente em um único processo Python:
 
 * **Python:** linguagem principal do projeto, usada tanto na lógica dos algoritmos quanto na interface do jogo.
-* **Pygame (pygame-ce):** biblioteca utilizada para renderização gráfica, captura de input (teclado/mouse) e controle do game loop. Não se trata de um framework — apenas uma ferramenta de baixo nível para desenho e eventos, sobre a qual toda a arquitetura do jogo foi construída do zero.
+* **Pygame (pygame-ce):** biblioteca utilizada para renderização gráfica, captura de input (teclado) e controle do game loop. Não se trata de um framework — apenas uma ferramenta de baixo nível para desenho e eventos, sobre a qual toda a arquitetura do jogo foi construída do zero.
 
 > Observação: o projeto foi estruturado desde o início pensando em uma futura migração para a web via **Pygbag** (compilação para WebAssembly), mantendo os módulos de algoritmos independentes da camada visual.
 
