@@ -24,7 +24,7 @@ def desenhar_painel(ecra, largura, altura):
 
 
 def desenhar_barra(ecra, x, y, largura, altura, fracao, cor):
-    """Barra horizontal: `fracao` (de 0 a 1) é o quanto dela fica preenchido."""
+    """Barra horizontal preenchida até `fracao` (0 a 1)."""
     pygame.draw.rect(ecra, COR_TRILHO, (x, y, largura, altura))
 
     preenchido = int(largura * max(0, min(fracao, 1)))

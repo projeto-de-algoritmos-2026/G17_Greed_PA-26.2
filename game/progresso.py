@@ -8,7 +8,7 @@ class Progresso:
         self.andar = 1
         self.ouro = 0
         self.inventario = []          # lista de Item
-        self.capacidade_maxima = CAPACIDADE_INICIAL   # kg que cabem na mochila
+        self.capacidade_maxima = CAPACIDADE_INICIAL   # kg
 
         # melhorias compradas no mercador
         self.compras_mochila = 0
@@ -26,7 +26,7 @@ class Progresso:
         return self.capacidade_maxima - self.peso_total()
 
     def peso_leve(self):
-        """Até este peso o jogador anda normal; acima dele começa a zona pesada."""
+        """Acima deste peso o jogador anda lento."""
         return self.capacidade_maxima - self.capacidade_maxima // DIVISOR_ZONA_PESADA
 
     def esta_pesado(self):

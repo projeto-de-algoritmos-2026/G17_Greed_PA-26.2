@@ -5,8 +5,6 @@ from game.entidades import Item
 
 # "chance" é o peso do sorteio: quanto maior, mais o item aparece nos baús.
 # "a_granel" marca os itens que dá para levar só uma parte (o valor é o do item inteiro).
-# Raro não quer dizer melhor valor por kg: há itens pesados e caros que valem a pena
-# e deixam o guloso sem espaço — é aí que dá para ganhar dele.
 CATALOGO = [
     {"nome": "Poção de Vida", "peso": 2, "valor": 22, "chance": 50, "raridade": "COMUM"},
     {"nome": "Adaga", "peso": 3, "valor": 30, "chance": 40, "raridade": "COMUM"},

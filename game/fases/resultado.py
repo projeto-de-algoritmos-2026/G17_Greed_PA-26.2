@@ -13,7 +13,7 @@ MAX_ITENS_NA_LISTA = 4
 
 
 def so_no_primeiro(itens, outros):
-    """Os itens de `itens` que não estão em `outros` (comparando pelo nome), mais valiosos primeiro."""
+    """Itens que estão em `itens` e não em `outros`."""
     nomes = [item.nome for item in outros]
 
     diferentes = []
@@ -27,7 +27,6 @@ def so_no_primeiro(itens, outros):
 
 
 def agrupar(itens):
-    """Junta os itens de mesmo nome em uma linha só: "3x Poção de Vida (6kg) $66"."""
     grupos = {}
     for item in itens:
         grupos.setdefault(item.nome, []).append(item)
@@ -37,7 +36,6 @@ def agrupar(itens):
         peso = sum(item.peso for item in grupo)
         valor = sum(item.valor for item in grupo)
 
-        # item a granel já aparece pelo peso; os outros ganham a quantidade na frente
         if len(grupo) > 1 and not grupo[0].a_granel:
             nome = f"{len(grupo)}x {nome}"
         agrupados.append(Item(nome, peso, valor, grupo[0].raridade))
@@ -50,19 +48,16 @@ class Resultado(Fase):
     def __init__(self, progresso):
         super().__init__(progresso, cor_fundo=COR_FUNDO_MENU, musica='assets/sons/masmorra.mp3')
 
-        # O guloso enche uma mochila do mesmo tamanho da do jogador
         capacidade = progresso.capacidade_maxima
 
         itens_jogador = separar_granel([item for item in progresso.inventario if not item.eh_pergaminho()])
         self.valor_jogador = sum(item.valor for item in itens_jogador)
         self.peso_jogador = sum(item.peso for item in itens_jogador)
 
-        # Mochila 0/1: cada item entra inteiro ou fica de fora
         itens_guloso, self.valor_guloso = mochila_gulosa(progresso.itens_do_andar, capacidade)
         self.peso_guloso = sum(item.peso for item in itens_guloso)
 
-        # Mochila fracionária: o valor que daria se todo item pudesse ser cortado em pedaços.
-        # Ninguém passa desse teto, nem o jogador nem o guloso.
+        # Teto: o valor que daria se fosse possível levar pedaços de qualquer item
         self.valor_teto = int(mochila_fracionaria(progresso.itens_do_andar, capacidade))
 
         self.so_jogador = so_no_primeiro(itens_jogador, itens_guloso)
@@ -78,7 +73,6 @@ class Resultado(Fase):
         progresso.melhor_aproveitamento = max(progresso.melhor_aproveitamento, self.aproveitamento)
 
     def calcular_bonus(self):
-        """Bônus cheio para quem empata com o guloso, nada para quem fica abaixo do mínimo."""
         if self.aproveitamento < APROVEITAMENTO_MINIMO:
             return 0
 
@@ -138,13 +132,11 @@ class Resultado(Fase):
         desenhar_texto_centralizado(ecra, "[ESPAÇO] Ir ao mercador", 340, self.fonte_texto, CINZA_INATIVO)
 
     def desenhar_placar(self, ecra, y, nome, valor, detalhe, cor):
-        """Uma linha do placar: nome, barra (o teto é a barra cheia) e valor."""
         desenhar_texto(ecra, nome, 30, y, self.fonte_texto, cor)
         desenhar_barra(ecra, 200, y + 1, 280, 12, valor / max(1, self.valor_teto), cor)
         desenhar_texto(ecra, f"${valor} {detalhe}", 490, y, self.fonte_texto, cor)
 
     def desenhar_diferencas(self, ecra):
-        """Só o que mudou entre as duas mochilas: é aí que se vê onde o guloso acertou ou errou."""
         if len(self.so_jogador) == 0 and len(self.so_guloso) == 0:
             desenhar_texto_centralizado(ecra, "Você e o guloso escolheram exatamente os mesmos itens.", 210,
                                         self.fonte_texto, BRANCO)

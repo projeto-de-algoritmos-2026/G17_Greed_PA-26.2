@@ -32,10 +32,8 @@ ANDAR_1 = [
 def itens_andar_1():
     """Itens de cada baú do andar 1, na ordem em que os B aparecem no mapa.
 
-    Foram escolhidos para a melhor mochila NÃO ser óbvia: são 52kg para uma
-    mochila de 30kg. O guloso enche 29kg ($432): ele pega o Escudo cedo e depois
-    não sobra espaço para o Saco de Moedas. Quem pensar um pouco passa dele
-    (Armadura + Saco + Anel + Rubi = 30kg, $455).
+    Foram escolhidos para a melhor mochila NÃO ser óbvia: não cabe tudo,
+    e quem pensar um pouco consegue ganhar do algoritmo guloso.
     """
     return [
         [

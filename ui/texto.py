@@ -19,5 +19,4 @@ def desenhar_texto_centralizado(ecra, texto, y, fonte, cor=BRANCO):
 
 
 def desenhar_texto_direita(ecra, texto, x_direita, y, fonte, cor=BRANCO):
-    """Escreve o texto terminando em `x_direita` (alinhado à direita)."""
     desenhar_texto(ecra, texto, x_direita - fonte.size(texto)[0], y, fonte, cor)
