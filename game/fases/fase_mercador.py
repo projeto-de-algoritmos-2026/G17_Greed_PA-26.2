@@ -3,6 +3,7 @@ from algoritmos.huffman import construir_codigos, codificar, decodificar
 from algoritmos.troco import troco_guloso
 from config import (
     DESCONTO_TROCO,
+    FPS,
     KG_POR_COMPRA,
     MOEDAS,
     NIVEL_MAXIMO_DECIFRADOR,
@@ -10,6 +11,7 @@ from config import (
     PRECO_DECIFRADOR,
     PRECO_MOCHILA,
     PRECO_SORTE,
+    TEMPOS_MINIJOGO,
 )
 from game.estado import EstadoJogo
 from game.fases.fase import Fase
@@ -26,8 +28,10 @@ from ui.cores import (
     CORES_RARIDADE,
     DOURADO,
     PRETO,
+    VERDE,
+    VERMELHO,
 )
-from ui.painel import desenhar_lista_itens
+from ui.painel import desenhar_barra, desenhar_lista_itens
 from ui.texto import desenhar_texto
 
 # Onde começa a área da direita (fala do mercador em cima, conteúdo embaixo)
@@ -46,6 +50,18 @@ def formatar_moedas(moedas):
         else:
             partes.append(str(moeda))
     return " + ".join(partes)
+
+
+def tempo_do_pagamento(preco):
+    """Segundos para pagar: quanto mais moedas o pagamento pede, mais tempo."""
+    moedas = len(troco_guloso(preco, MOEDAS))
+    indice = min(max(0, moedas - 2), len(TEMPOS_MINIJOGO) - 1)
+    return TEMPOS_MINIJOGO[indice]
+
+
+def tempo_do_pergaminho(raridade):
+    """Segundos para decifrar: quanto mais raro (palavra maior), mais tempo."""
+    return TEMPOS_MINIJOGO[PERGAMINHOS[raridade]["nivel"] - 1]
 
 
 class FaseMercador(Fase):
@@ -73,7 +89,12 @@ class FaseMercador(Fase):
         self.codigos = {}
         self.bits = ""
         self.palavra_digitada = ""
+        self.pergaminho_iniciado = False  # o tempo só corre depois que o jogador começa
         self.pergaminho_lido = False
+
+        # cronômetro dos dois minijogos (pagar e decifrar), em segundos
+        self.tempo_total = 0
+        self.tempo_restante = 0
 
     # ------------------------------------------------------------------
     # Menu principal do mercador
@@ -89,7 +110,8 @@ class FaseMercador(Fase):
              self.abrir_venda),
 
             (f"Mochila maior (+{KG_POR_COMPRA}kg)", PRECO_MOCHILA * (progresso.compras_mochila + 1),
-             [f"Hoje você carrega {progresso.capacidade_maxima}kg sem ficar lento.", "Quer mais espaço?"],
+             [f"Hoje cabem {progresso.capacidade_maxima}kg na sua mochila.",
+              "Com mais espaço você traz mais coisa de cada andar."],
              self.comprar_mochila),
 
             self.opcao_melhoria("Amuleto da Sorte", progresso.nivel_sorte, NIVEL_MAXIMO_SORTE, PRECO_SORTE,
@@ -104,7 +126,7 @@ class FaseMercador(Fase):
 
             ("Decifrar pergaminho", None,
              ["Pergaminhos são escritos em código de Huffman.",
-              "Sem o Decifrador certo, você tem uma chance só de ler."],
+              "Sem o Decifrador certo, é uma chance só e contra o relógio."],
              self.abrir_pergaminho),
 
             ("Próxima masmorra", None,
@@ -122,6 +144,9 @@ class FaseMercador(Fase):
         return (f"{nome} nível {nivel + 1}", preco_base * (nivel + 1), fala, acao)
 
     def atualizar(self, eventos):
+        if self.passar_tempo():
+            return  # o tempo acabou neste instante: as teclas deste quadro não valem
+
         for evento in eventos:
             if evento.type != pygame.KEYDOWN:
                 continue
@@ -159,6 +184,35 @@ class FaseMercador(Fase):
 
     def voltar_ao_menu(self):
         self.estado_fase = "MENU"
+
+    # ------------------------------------------------------------------
+    # Cronômetro dos minijogos
+    # ------------------------------------------------------------------
+
+    def iniciar_tempo(self, segundos):
+        self.tempo_total = segundos
+        self.tempo_restante = segundos
+
+    def tempo_correndo(self):
+        if self.estado_fase == "PAGANDO":
+            return True
+        return self.estado_fase == "PERGAMINHO" and self.pergaminho_iniciado and not self.pergaminho_lido
+
+    def passar_tempo(self):
+        """Desconta um quadro do cronômetro. Devolve True quando o tempo acaba."""
+        if not self.tempo_correndo():
+            return False
+
+        self.tempo_restante -= 1 / FPS
+        if self.tempo_restante > 0:
+            return False
+
+        self.tempo_restante = 0
+        if self.estado_fase == "PAGANDO":
+            self.concluir_pagamento(no_tempo=False)
+        else:
+            self.conferir_palavra(no_tempo=False)
+        return True
 
     def proxima_masmorra(self):
         self.progresso.andar += 1
@@ -233,9 +287,11 @@ class FaseMercador(Fase):
         self.acao_da_compra = acao
         self.moedas_na_mesa = []
         self.indice_moeda = 0
+        self.iniciar_tempo(tempo_do_pagamento(preco))
         self.resposta = [
-            f"São {preco} de ouro. Ponha as moedas na mesa.",
-            f"Se usar o menor número de moedas, dou {int(DESCONTO_TROCO * 100)}% de desconto!",
+            f"São {preco} de ouro. Você tem {self.tempo_total} segundos para pôr na mesa.",
+            f"Com o menor número de moedas, dou {int(DESCONTO_TROCO * 100)}% de desconto!",
+            "Se o tempo acabar, cobro o preço cheio.",
         ]
 
     def atualizar_pagamento(self, evento):
@@ -259,11 +315,17 @@ class FaseMercador(Fase):
             if na_mesa == self.preco:
                 self.concluir_pagamento()
 
-    def concluir_pagamento(self):
+    def concluir_pagamento(self, no_tempo=True):
         moedas_guloso = troco_guloso(self.preco, MOEDAS)
         usadas = len(self.moedas_na_mesa)
 
-        if usadas <= len(moedas_guloso):
+        if not no_tempo:
+            desconto = 0
+            self.resposta = [
+                "O tempo acabou! Cobrei o preço cheio.",
+                f"O guloso pagaria com {len(moedas_guloso)} moedas: {formatar_moedas(moedas_guloso)}.",
+            ]
+        elif usadas <= len(moedas_guloso):
             desconto = int(self.preco * DESCONTO_TROCO)
             self.resposta = [
                 f"Perfeito! {usadas} moedas é o menor número possível.",
@@ -295,6 +357,7 @@ class FaseMercador(Fase):
         self.codigos = construir_codigos(self.pergaminho.texto)
         self.bits = codificar(self.pergaminho.texto, self.codigos)
         self.palavra_digitada = ""
+        self.pergaminho_iniciado = False
         self.pergaminho_lido = False
 
         nivel_exigido = PERGAMINHOS[self.pergaminho.raridade]["nivel"]
@@ -302,10 +365,11 @@ class FaseMercador(Fase):
             valor = self.revelar_pergaminho(acertou=True)
             self.resposta = ["Seu Decifrador leu o pergaminho sozinho.", f"Ele vale {valor} de ouro!"]
         else:
+            self.iniciar_tempo(tempo_do_pergaminho(self.pergaminho.raridade))
             self.resposta = [
                 f"Seu Decifrador é nível {self.progresso.nivel_decifrador}; este exige nível {nivel_exigido}.",
-                "Use a tabela para ler os bits e digite a palavra.",
-                "Você só tem uma chance!",
+                f"Você mesmo terá que ler: uma chance só, em {self.tempo_total} segundos.",
+                "Se errar ou o tempo acabar, ele passa a valer a metade.",
             ]
 
     def revelar_pergaminho(self, acertou):
@@ -324,9 +388,15 @@ class FaseMercador(Fase):
                 self.voltar_ao_menu()
                 self.resposta = None
 
-        elif evento.key == pygame.K_ESCAPE:
-            self.voltar_ao_menu()
-            self.resposta = ["Tudo bem, o pergaminho continua selado."]
+        elif not self.pergaminho_iniciado:
+            # a tabela e os bits só aparecem quando o tempo começa a correr
+            if evento.key == pygame.K_ESCAPE:
+                self.voltar_ao_menu()
+                self.resposta = ["Tudo bem, o pergaminho continua selado."]
+            elif evento.key in (pygame.K_SPACE, pygame.K_RETURN):
+                self.pergaminho_iniciado = True
+                self.resposta = ["Use a tabela para ler os bits e digite a palavra.", "Valendo!"]
+
         elif evento.key == pygame.K_BACKSPACE:
             self.palavra_digitada = self.palavra_digitada[:-1]
         elif evento.key == pygame.K_RETURN:
@@ -335,14 +405,15 @@ class FaseMercador(Fase):
         elif evento.unicode.isalpha() and len(self.palavra_digitada) < 16:
             self.palavra_digitada += evento.unicode.upper()
 
-    def conferir_palavra(self):
-        acertou = self.palavra_digitada == self.pergaminho.texto
+    def conferir_palavra(self, no_tempo=True):
+        acertou = no_tempo and self.palavra_digitada == self.pergaminho.texto
         valor = self.revelar_pergaminho(acertou)
 
         if acertou:
             self.resposta = ["Você decifrou sozinho! Impressionante.", f"O pergaminho vale {valor} de ouro!"]
         else:
-            self.resposta = [f"Errou... estava escrito {self.pergaminho.texto}.",
+            motivo = "Errou..." if no_tempo else "O tempo acabou!"
+            self.resposta = [f"{motivo} Estava escrito {self.pergaminho.texto}.",
                              f"O pergaminho rasgou: agora vale só {valor} de ouro."]
 
     # ------------------------------------------------------------------
@@ -375,9 +446,12 @@ class FaseMercador(Fase):
         elif self.pergaminho_lido:
             self.desenhar_pergaminho(ecra)
             rodape = "[ESPAÇO] Voltar"
+        elif not self.pergaminho_iniciado:
+            self.desenhar_pergaminho_selado(ecra)
+            rodape = "[ESPAÇO] Começar | [ESC] Deixar para depois"
         else:
             self.desenhar_pergaminho(ecra)
-            rodape = "[LETRAS] Digitar | [BACKSPACE] Apagar | [ENTER] Responder | [ESC] Deixar para depois"
+            rodape = "[LETRAS] Digitar | [BACKSPACE] Apagar | [ENTER] Responder"
 
         desenhar_texto(ecra, rodape, 24, 340, self.fonte_texto, CINZA_INATIVO)
 
@@ -391,6 +465,16 @@ class FaseMercador(Fase):
 
         for i, linha in enumerate(fala):
             desenhar_texto(ecra, linha, X_CONTEUDO + 12, 52 + i * 18, self.fonte_texto, BRANCO)
+
+    def desenhar_tempo(self, ecra, y):
+        """Barra do cronômetro dos minijogos: fica vermelha nos últimos segundos."""
+        segundos = int(self.tempo_restante) + 1 if self.tempo_restante > 0 else 0
+        cor = VERMELHO if segundos <= 3 else VERDE
+
+        largura_texto = desenhar_texto(ecra, f"Tempo: {segundos}s", X_CONTEUDO + 12, y, self.fonte_texto, cor)
+        x_barra = X_CONTEUDO + 12 + max(largura_texto, 80) + 10
+        desenhar_barra(ecra, x_barra, y + 3, X_CONTEUDO + LARGURA_CONTEUDO - x_barra, 8,
+                       self.tempo_restante / self.tempo_total, cor)
 
     def desenhar_menu(self, ecra):
         for i, (texto, preco, fala, acao) in enumerate(self.opcoes()):
@@ -441,6 +525,20 @@ class FaseMercador(Fase):
             desenhar_texto(ecra, formatar_moedas(self.moedas_na_mesa),
                            X_CONTEUDO + 12, Y_CONTEUDO + 110, self.fonte_texto, BRANCO)
 
+        self.desenhar_tempo(ecra, Y_CONTEUDO + 140)
+
+    def desenhar_pergaminho_selado(self, ecra):
+        """Antes de começar: só o tamanho do desafio, para ninguém ler a tabela com o tempo parado."""
+        x = X_CONTEUDO + 12
+        cor_raridade = CORES_RARIDADE[self.pergaminho.raridade]
+
+        desenhar_texto(ecra, "Pergaminho selado", x, Y_CONTEUDO, self.fonte_titulo, cor_raridade)
+        desenhar_texto(ecra, f"Palavra de {len(self.pergaminho.texto)} letras, {len(self.bits)} bits para ler.",
+                       x, Y_CONTEUDO + 34, self.fonte_texto, BRANCO)
+        desenhar_texto(ecra, f"Você terá {self.tempo_total} segundos.", x, Y_CONTEUDO + 54, self.fonte_texto, BRANCO)
+        desenhar_texto(ecra, "A tabela e os bits só aparecem quando você começar.",
+                       x, Y_CONTEUDO + 82, self.fonte_texto, CINZA_INATIVO)
+
     def desenhar_pergaminho(self, ecra):
         x = X_CONTEUDO + 12
         cor_raridade = CORES_RARIDADE[self.pergaminho.raridade]
@@ -464,3 +562,4 @@ class FaseMercador(Fase):
         else:
             desenhar_texto(ecra, f"Sua resposta: {self.palavra_digitada}_", x, Y_CONTEUDO + 134,
                            self.fonte_titulo, DOURADO)
+            self.desenhar_tempo(ecra, Y_CONTEUDO + 170)

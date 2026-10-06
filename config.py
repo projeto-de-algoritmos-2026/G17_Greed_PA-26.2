@@ -47,3 +47,7 @@ NIVEL_MAXIMO_SORTE = 3
 NIVEL_MAXIMO_DECIFRADOR = 4
 
 DESCONTO_TROCO = 0.10    # desconto de quem paga com o menor número de moedas
+
+# Tempo máximo (segundos) dos dois minijogos do mercador: quanto mais difícil, mais tempo.
+# Pergaminho: comum, raro, épico, lendário. Pagamento: pelo número de moedas que o guloso usaria.
+TEMPOS_MINIJOGO = [12, 14, 16, 18]
