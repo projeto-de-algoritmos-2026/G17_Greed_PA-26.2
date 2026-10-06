@@ -1,1 +1,0 @@
-# Tela de venda + integração com cmp.py/huffman.py
