@@ -5,27 +5,29 @@ from game.entidades import Item
 
 # "chance" é o peso do sorteio: quanto maior, mais o item aparece nos baús.
 # "a_granel" marca os itens que dá para levar só uma parte (o valor é o do item inteiro).
+# Raro não quer dizer melhor valor por kg: há itens pesados e caros que valem a pena
+# e deixam o guloso sem espaço — é aí que dá para ganhar dele.
 CATALOGO = [
-    {"nome": "Poção de Vida", "peso": 1, "valor": 20, "chance": 50, "raridade": "COMUM"},
-    {"nome": "Adaga", "peso": 2, "valor": 30, "chance": 40, "raridade": "COMUM"},
-    {"nome": "Capacete de Ferro", "peso": 3, "valor": 40, "chance": 30, "raridade": "COMUM"},
-    {"nome": "Espada Longa", "peso": 5, "valor": 50, "chance": 20, "raridade": "COMUM"},
-    {"nome": "Anel de Prata", "peso": 1, "valor": 60, "chance": 18, "raridade": "RARO"},
-    {"nome": "Escudo Reforçado", "peso": 4, "valor": 90, "chance": 15, "raridade": "RARO"},
-    {"nome": "Pó de Cristal", "peso": 4, "valor": 60, "chance": 15, "raridade": "RARO", "a_granel": True},
-    {"nome": "Rubi", "peso": 1, "valor": 100, "chance": 10, "raridade": "EPICO"},
-    {"nome": "Cálice Encantado", "peso": 2, "valor": 130, "chance": 8, "raridade": "EPICO"},
-    {"nome": "Elixir em Frasco", "peso": 3, "valor": 120, "chance": 6, "raridade": "EPICO", "a_granel": True},
-    {"nome": "Coroa de Ouro", "peso": 3, "valor": 150, "chance": 5, "raridade": "LENDARIO"},
-    {"nome": "Cajado do Arquimago", "peso": 4, "valor": 260, "chance": 3, "raridade": "LENDARIO"},
+    {"nome": "Poção de Vida", "peso": 2, "valor": 22, "chance": 50, "raridade": "COMUM"},
+    {"nome": "Adaga", "peso": 3, "valor": 30, "chance": 40, "raridade": "COMUM"},
+    {"nome": "Capacete de Ferro", "peso": 4, "valor": 34, "chance": 30, "raridade": "COMUM"},
+    {"nome": "Espada Longa", "peso": 6, "valor": 45, "chance": 20, "raridade": "COMUM"},
+    {"nome": "Anel de Prata", "peso": 1, "valor": 30, "chance": 18, "raridade": "RARO"},
+    {"nome": "Escudo Reforçado", "peso": 7, "valor": 95, "chance": 15, "raridade": "RARO"},
+    {"nome": "Pó de Cristal", "peso": 4, "valor": 48, "chance": 15, "raridade": "RARO", "a_granel": True},
+    {"nome": "Rubi", "peso": 1, "valor": 55, "chance": 10, "raridade": "EPICO"},
+    {"nome": "Cálice Encantado", "peso": 3, "valor": 80, "chance": 8, "raridade": "EPICO"},
+    {"nome": "Elixir em Frasco", "peso": 3, "valor": 66, "chance": 6, "raridade": "EPICO", "a_granel": True},
+    {"nome": "Coroa de Ouro", "peso": 5, "valor": 140, "chance": 5, "raridade": "LENDARIO"},
+    {"nome": "Cajado do Arquimago", "peso": 9, "valor": 230, "chance": 3, "raridade": "LENDARIO"},
 ]
 
 # Pergaminhos: quanto mais raro, maior a palavra, o valor e o nível exigido para ler.
 PERGAMINHOS = {
-    "COMUM": {"chance": 50, "nivel": 1, "valor": 60, "palavras": ["OURO", "FADA", "MAPA", "DADO"]},
-    "RARO": {"chance": 30, "nivel": 2, "valor": 120, "palavras": ["COROA", "ADAGA", "MOEDA", "BARRIL"]},
-    "EPICO": {"chance": 15, "nivel": 3, "valor": 220, "palavras": ["TESOURO", "MASMORRA", "ESMERALDA"]},
-    "LENDARIO": {"chance": 5, "nivel": 4, "valor": 400, "palavras": ["ABRACADABRA", "NECROMANTE", "ENCANTAMENTO"]},
+    "COMUM": {"chance": 50, "nivel": 1, "valor": 40, "palavras": ["OURO", "FADA", "MAPA", "DADO"]},
+    "RARO": {"chance": 30, "nivel": 2, "valor": 90, "palavras": ["COROA", "ADAGA", "MOEDA", "BARRIL"]},
+    "EPICO": {"chance": 15, "nivel": 3, "valor": 170, "palavras": ["TESOURO", "MASMORRA", "ESMERALDA"]},
+    "LENDARIO": {"chance": 5, "nivel": 4, "valor": 320, "palavras": ["ABRACADABRA", "NECROMANTE", "ENCANTAMENTO"]},
 }
 
 # Quanto vale um pergaminho que ninguém decifrou

@@ -32,24 +32,26 @@ ANDAR_1 = [
 def itens_andar_1():
     """Itens de cada baú do andar 1, na ordem em que os B aparecem no mapa.
 
-    Foram escolhidos para a melhor mochila NÃO ser óbvia: não cabe tudo,
-    e quem pensar um pouco consegue ganhar do algoritmo guloso.
+    Foram escolhidos para a melhor mochila NÃO ser óbvia: são 52kg para uma
+    mochila de 30kg. O guloso enche 29kg ($432): ele pega o Escudo cedo e depois
+    não sobra espaço para o Saco de Moedas. Quem pensar um pouco passa dele
+    (Armadura + Saco + Anel + Rubi = 30kg, $455).
     """
     return [
         [
-            Item("Espada Longa", 5, 50),
-            Item("Poção de Vida", 1, 20),
-            Item("Adaga", 2, 30),
+            Item("Espada Longa", 6, 45),
+            Item("Poção de Vida", 2, 22),
+            Item("Adaga", 3, 30),
         ],
         [
             Item("Armadura Pesada", 15, 200, "RARO"),
-            Item("Capacete de Ferro", 3, 40),
-            Item("Anel de Prata", 1, 60, "RARO"),
+            Item("Capacete de Ferro", 4, 34),
+            Item("Anel de Prata", 1, 30, "RARO"),
             criar_pergaminho("COMUM", "MAPA"),
         ],
         [
-            Item("Saco de Moedas", 14, 180, "RARO"),
-            Item("Escudo Reforçado", 4, 90, "RARO"),
-            Item("Rubi", 1, 100, "EPICO"),
+            Item("Saco de Moedas", 13, 170, "RARO"),
+            Item("Escudo Reforçado", 7, 95, "RARO"),
+            Item("Rubi", 1, 55, "EPICO"),
         ],
     ]

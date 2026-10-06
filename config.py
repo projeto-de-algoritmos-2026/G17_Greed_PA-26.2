@@ -26,22 +26,22 @@ VELOCIDADE_LENTA = VELOCIDADE_JOGADOR // 2
 CAPACIDADE_INICIAL = 30  # kg que cabem na mochila
 DIVISOR_ZONA_PESADA = 3  # o último 1/3 da mochila é a zona pesada: o jogador anda lento
 
-CHANCE_PERGAMINHO = 25   # % de chance de um baú ter um pergaminho
+CHANCE_PERGAMINHO = 20   # % de chance de um baú ter um pergaminho
 
 #resultado
 
 APROVEITAMENTO_MINIMO = 0.8  # abaixo de 80% do valor do guloso não há bônus
-BONUS_MAXIMO_OURO = 50       # bônus de quem empata com o guloso
-BONUS_VENCEU_GULOSO = 30     # bônus extra de quem ganha do guloso
+BONUS_MAXIMO_OURO = 60       # bônus de quem empata com o guloso
+BONUS_VENCEU_GULOSO = 60     # bônus extra de quem ganha do guloso
 
 #mercador
 
 MOEDAS = [100, 50, 25, 10, 5, 1]
 
 KG_POR_COMPRA = 5
-PRECO_MOCHILA = 65       # multiplicado por (compras já feitas + 1)
-PRECO_SORTE = 90         # multiplicado por (nível atual + 1)
-PRECO_DECIFRADOR = 45    # multiplicado por (nível atual + 1)
+PRECO_MOCHILA = 235      # multiplicado por (compras já feitas + 1)
+PRECO_SORTE = 340        # multiplicado por (nível atual + 1)
+PRECO_DECIFRADOR = 165   # multiplicado por (nível atual + 1)
 
 NIVEL_MAXIMO_SORTE = 3
 NIVEL_MAXIMO_DECIFRADOR = 4
