@@ -23,6 +23,14 @@ def desenhar_painel(ecra, largura, altura):
     return x, y
 
 
+def desenhar_barra(ecra, x, y, largura, altura, fracao, cor):
+    """Barra horizontal: `fracao` (de 0 a 1) é o quanto dela fica preenchido."""
+    pygame.draw.rect(ecra, COR_TRILHO, (x, y, largura, altura))
+
+    preenchido = int(largura * max(0, min(fracao, 1)))
+    pygame.draw.rect(ecra, cor, (x, y, preenchido, altura))
+
+
 def desenhar_lista_itens(ecra, fonte, itens, x, y, largura, selecionado=None, max_itens=8):
     """Desenha os itens um embaixo do outro, cada nome na cor da sua raridade.
 

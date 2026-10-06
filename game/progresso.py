@@ -1,4 +1,4 @@
-from config import CAPACIDADE_INICIAL, FATOR_SOBRECARGA
+from config import CAPACIDADE_INICIAL, DIVISOR_ZONA_PESADA
 
 
 class Progresso:
@@ -8,7 +8,7 @@ class Progresso:
         self.andar = 1
         self.ouro = 0
         self.inventario = []          # lista de Item
-        self.capacidade_maxima = CAPACIDADE_INICIAL   # kg
+        self.capacidade_maxima = CAPACIDADE_INICIAL   # kg que cabem na mochila
 
         # melhorias compradas no mercador
         self.compras_mochila = 0
@@ -22,9 +22,12 @@ class Progresso:
     def peso_total(self):
         return sum(item.peso for item in self.inventario)
 
-    def limite_de_peso(self):
-        """Máximo que dá para carregar (acima da capacidade, mas andando lento)."""
-        return int(self.capacidade_maxima * FATOR_SOBRECARGA)
+    def espaco_livre(self):
+        return self.capacidade_maxima - self.peso_total()
+
+    def peso_leve(self):
+        """Até este peso o jogador anda normal; acima dele começa a zona pesada."""
+        return self.capacidade_maxima - self.capacidade_maxima // DIVISOR_ZONA_PESADA
 
     def esta_pesado(self):
-        return self.peso_total() > self.capacidade_maxima
+        return self.peso_total() > self.peso_leve()

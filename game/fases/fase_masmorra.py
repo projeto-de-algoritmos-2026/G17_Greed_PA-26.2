@@ -11,11 +11,18 @@ from ui.cores import (
     COR_DIVISORIA_PAINEL,
     COR_FUNDO_MASMORRA,
     DOURADO,
+    VERDE,
     VERMELHO,
 )
-from ui.painel import desenhar_painel, desenhar_lista_itens
-from ui.texto import desenhar_texto
+from ui.painel import desenhar_barra, desenhar_painel, desenhar_lista_itens
+from ui.texto import desenhar_texto, desenhar_texto_centralizado, desenhar_texto_direita
 from config import TAMANHO_PISO, COLUNAS, LINHAS
+
+# Medidas dos painéis de mochila e baú
+ALTURA_PAINEL = 268
+ALTURA_RODAPE = 56   # faixa de baixo, com a dica e as teclas
+Y_LISTA = 52         # onde começam os itens, contando do topo do painel
+ITENS_NO_PAINEL = 7  # itens visíveis de cada vez (o resto rola)
 
 
 class celulaBSP:
@@ -124,6 +131,7 @@ class FaseMasmorra(Fase):
 
         self.painel_focado = "MOCHILA"
         self.indice_selecionado = 0
+        self.aviso = None  # recado no rodapé do painel (some na próxima tecla)
 
         # O primeiro andar é sempre o mesmo; os outros são sorteados
         if self.progresso.andar == 1:
@@ -215,6 +223,8 @@ class FaseMasmorra(Fase):
         elif self.estado_fase == "LOTEANDO":
             for evento in eventos:
                 if evento.type == pygame.KEYDOWN:
+                    self.aviso = None
+
                     if evento.key == pygame.K_ESCAPE:
                         self.estado_fase = "EXPLORANDO"
                         self.bau_aberto_atualmente = None
@@ -226,8 +236,8 @@ class FaseMasmorra(Fase):
                     elif evento.key == pygame.K_UP:
                         self.indice_selecionado = max(0, self.indice_selecionado - 1)
                     elif evento.key == pygame.K_DOWN:
-                        lista_atual = self.bau_aberto_atualmente.itens if self.painel_focado == "BAU" else self.progresso.inventario
-                        self.indice_selecionado = min(max(0, len(lista_atual) - 1), self.indice_selecionado + 1)
+                        ultimo = max(0, len(self.lista_focada()) - 1)
+                        self.indice_selecionado = min(ultimo, self.indice_selecionado + 1)
                     elif evento.key == pygame.K_SPACE:
                         self.transferir_item()
 
@@ -242,6 +252,11 @@ class FaseMasmorra(Fase):
                         if len(self.progresso.inventario) > 0:
                             self.indice_selecionado = min(len(self.progresso.inventario) - 1, self.indice_selecionado + 1)
 
+    def lista_focada(self):
+        if self.painel_focado == "BAU":
+            return self.bau_aberto_atualmente.itens
+        return self.progresso.inventario
+
     def tentar_abrir_baus(self):
         baus_proximos = pygame.sprite.spritecollide(self.jogador, self.grupo_baus, False)
         for bau in baus_proximos:
@@ -251,6 +266,7 @@ class FaseMasmorra(Fase):
             self.estado_fase = "LOTEANDO"
             self.painel_focado = "BAU"
             self.indice_selecionado = 0
+            self.aviso = None
             break
 
     def ver_mochila(self):
@@ -275,9 +291,10 @@ class FaseMasmorra(Fase):
         item = origem[self.indice_selecionado]
         peso_movido = 1 if item.a_granel else item.peso  # item a granel vai 1kg por vez
 
-        if destino is mochila:
-            if self.progresso.peso_total() + peso_movido > self.progresso.limite_de_peso():
-                return  # não aguenta mais peso
+        espaco_livre = self.progresso.espaco_livre()
+        if destino is mochila and peso_movido > espaco_livre:
+            self.aviso = f"Não cabe: precisa de {peso_movido}kg e só restam {espaco_livre}kg na mochila."
+            return
 
         adicionar_item(destino, retirar_item(origem, self.indice_selecionado))
         self.indice_selecionado = max(0, min(self.indice_selecionado, len(origem) - 1))
@@ -310,11 +327,26 @@ class FaseMasmorra(Fase):
                 self.escada_gerada = True
 
     def titulo_mochila(self):
-        peso = self.progresso.peso_total()
-        titulo = f"Mochila ({peso}/{self.progresso.capacidade_maxima}kg)"
+        titulo = f"Mochila {self.progresso.peso_total()}/{self.progresso.capacidade_maxima}kg"
         if self.progresso.esta_pesado():
             titulo += " LENTO"
         return titulo
+
+    def dica_da_mochila(self):
+        """Uma linha (texto, cor) para o rodapé do painel: explica a regra de peso que vale agora."""
+        progresso = self.progresso
+
+        if self.aviso:
+            return self.aviso, VERMELHO
+
+        if self.estado_fase == "LOTEANDO" and self.lista_focada():
+            item = self.lista_focada()[self.indice_selecionado]
+            if item.a_granel:
+                return f"A granel: cada [ESPAÇO] leva 1kg (${item.valor // item.peso} por kg).", BRANCO
+
+        if progresso.esta_pesado():
+            return f"Mochila pesada: acima de {progresso.peso_leve()}kg você anda LENTO.", VERMELHO
+        return f"Cabem {progresso.capacidade_maxima}kg. Acima de {progresso.peso_leve()}kg você anda lento.", CINZA_INATIVO
 
     def desenhar(self, ecra):
         ecra.fill(self.cor_fundo)
@@ -337,40 +369,74 @@ class FaseMasmorra(Fase):
                            self.fonte_texto, DOURADO)
 
     def desenhar_painel_bau(self, ecra):
-        largura_painel, altura_painel = 560, 260
-        x_painel, y_painel = desenhar_painel(ecra, largura_painel, altura_painel)
+        largura_painel = 560
+        x_painel, y_painel = desenhar_painel(ecra, largura_painel, ALTURA_PAINEL)
 
         meio = largura_painel // 2
-        pygame.draw.line(ecra, COR_DIVISORIA_PAINEL, (x_painel + meio, y_painel),
-                         (x_painel + meio, y_painel + altura_painel - 1), 2)
+        largura_coluna = meio - 40
+
+        # a divisória para no rodapé, que ocupa a largura toda do painel
+        y_rodape = y_painel + ALTURA_PAINEL - ALTURA_RODAPE
+        pygame.draw.line(ecra, COR_DIVISORIA_PAINEL, (x_painel + meio, y_painel + 2),
+                         (x_painel + meio, y_rodape), 2)
 
         cor_mochila = DOURADO if self.painel_focado == "MOCHILA" else CINZA_INATIVO
         cor_bau = DOURADO if self.painel_focado == "BAU" else CINZA_INATIVO
 
-        desenhar_texto(ecra, self.titulo_mochila(), x_painel + 20, y_painel + 10, self.fonte_titulo, cor_mochila)
-        desenhar_texto(ecra, "Bau", x_painel + meio + 20, y_painel + 10, self.fonte_titulo, cor_bau)
-
         selecionado_mochila = self.indice_selecionado if self.painel_focado == "MOCHILA" else None
         selecionado_bau = self.indice_selecionado if self.painel_focado == "BAU" else None
 
-        desenhar_lista_itens(ecra, self.fonte_texto, self.progresso.inventario,
-                             x_painel + 20, y_painel + 45, meio - 30, selecionado_mochila)
-        desenhar_lista_itens(ecra, self.fonte_texto, self.bau_aberto_atualmente.itens,
-                             x_painel + meio + 20, y_painel + 45, meio - 30, selecionado_bau)
+        self.desenhar_coluna_mochila(ecra, x_painel + 20, y_painel, largura_coluna, cor_mochila, selecionado_mochila)
 
-        aviso = f"Acima de {self.progresso.capacidade_maxima}kg você anda lento. Máximo: {self.progresso.limite_de_peso()}kg"
-        desenhar_texto(ecra, aviso, x_painel + 20, y_painel + altura_painel - 45, self.fonte_texto, CINZA_INATIVO)
-        desenhar_texto(ecra, "[SETAS] Navegar | [ESPAÇO] Transferir | [ESC] Fechar",
-                       x_painel + 20, y_painel + altura_painel - 25, self.fonte_texto, CINZA_INATIVO)
+        x_bau = x_painel + meio + 20
+        desenhar_texto(ecra, "Baú", x_bau, y_painel + 10, self.fonte_titulo, cor_bau)
+        self.desenhar_itens(ecra, self.bau_aberto_atualmente.itens, x_bau, y_painel + Y_LISTA,
+                            largura_coluna, selecionado_bau)
+
+        self.desenhar_rodape(ecra, x_painel, y_rodape, largura_painel,
+                             "[SETAS] Navegar   [TAB] Trocar de lado   [ESPAÇO] Transferir   [ESC] Fechar")
 
     def desenhar_painel_mochila(self, ecra):
-        largura_painel, altura_painel = 300, 260
-        x_painel, y_painel = desenhar_painel(ecra, largura_painel, altura_painel)
+        largura_painel = 400
+        x_painel, y_painel = desenhar_painel(ecra, largura_painel, ALTURA_PAINEL)
 
-        desenhar_texto(ecra, self.titulo_mochila(), x_painel + 20, y_painel + 10, self.fonte_titulo, DOURADO)
+        self.desenhar_coluna_mochila(ecra, x_painel + 20, y_painel, largura_painel - 40, DOURADO,
+                                     self.indice_selecionado)
 
-        desenhar_lista_itens(ecra, self.fonte_texto, self.progresso.inventario,
-                             x_painel + 20, y_painel + 45, largura_painel - 30, self.indice_selecionado)
+        self.desenhar_rodape(ecra, x_painel, y_painel + ALTURA_PAINEL - ALTURA_RODAPE, largura_painel,
+                             "[SETAS] Navegar   [E / ESC] Fechar")
 
-        desenhar_texto(ecra, "[SETAS] Navegar | [E/ESC] Fechar",
-                       x_painel + 20, y_painel + altura_painel - 25, self.fonte_texto, CINZA_INATIVO)
+    def desenhar_coluna_mochila(self, ecra, x, y_painel, largura, cor_titulo, selecionado):
+        """Título, barra de peso e itens da mochila."""
+        progresso = self.progresso
+        pesado = progresso.esta_pesado()
+
+        desenhar_texto(ecra, "Mochila", x, y_painel + 10, self.fonte_titulo, cor_titulo)
+        desenhar_texto_direita(ecra, f"{progresso.peso_total()}/{progresso.capacidade_maxima}kg",
+                               x + largura, y_painel + 10, self.fonte_titulo, VERMELHO if pesado else BRANCO)
+
+        y_barra = y_painel + 36
+        desenhar_barra(ecra, x, y_barra, largura, 6, progresso.peso_total() / progresso.capacidade_maxima,
+                       VERMELHO if pesado else VERDE)
+
+        # o risco marca onde começa a zona pesada (dali para a direita o jogador anda lento)
+        x_risco = x + largura * progresso.peso_leve() // progresso.capacidade_maxima
+        pygame.draw.line(ecra, BRANCO, (x_risco, y_barra - 2), (x_risco, y_barra + 7))
+
+        self.desenhar_itens(ecra, progresso.inventario, x, y_painel + Y_LISTA, largura, selecionado)
+
+    def desenhar_itens(self, ecra, itens, x, y, largura, selecionado):
+        if len(itens) == 0:
+            desenhar_texto(ecra, "(vazio)", x, y, self.fonte_texto, CINZA_INATIVO)
+            return
+
+        desenhar_lista_itens(ecra, self.fonte_texto, itens, x, y, largura + 10, selecionado, ITENS_NO_PAINEL)
+
+    def desenhar_rodape(self, ecra, x_painel, y_rodape, largura_painel, teclas):
+        """Faixa de baixo do painel: a dica da mochila e, embaixo, as teclas."""
+        pygame.draw.line(ecra, COR_DIVISORIA_PAINEL, (x_painel + 2, y_rodape),
+                         (x_painel + largura_painel - 3, y_rodape), 2)
+
+        dica, cor = self.dica_da_mochila()
+        desenhar_texto_centralizado(ecra, dica, y_rodape + 9, self.fonte_texto, cor)
+        desenhar_texto_centralizado(ecra, teclas, y_rodape + 31, self.fonte_texto, CINZA_INATIVO)

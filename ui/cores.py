@@ -6,6 +6,10 @@ PRETO = (0, 0, 0)
 DOURADO = (255, 215, 0)
 # Vermelho claro (avisos)
 VERMELHO = (230, 90, 90)
+# Verde claro (tudo certo)
+VERDE = (80, 220, 100)
+# Azul claro (o algoritmo guloso na tela de resultado)
+COR_GULOSO = (90, 170, 230)
 
 # Cinza-azulado muito escuro
 COR_FUNDO_MASMORRA = (30, 30, 40)

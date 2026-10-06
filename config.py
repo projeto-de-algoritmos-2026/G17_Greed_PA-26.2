@@ -21,15 +21,18 @@ FONTE = 'assets/fonts/DigitalDisco.ttf'
 VELOCIDADE_JOGADOR = TAMANHO_PISO // 8  #pixel por frame
 VELOCIDADE_LENTA = VELOCIDADE_JOGADOR // 2
 
-CAPACIDADE_INICIAL = 20  # kg que o jogador carrega sem ficar lento
-FATOR_SOBRECARGA = 1.5   # até capacidade x 1.5 ele ainda carrega, mas anda lento
+# A mochila é uma só: cabe até a capacidade e nada além disso.
+# É esse mesmo número que o algoritmo guloso usa na tela de resultado.
+CAPACIDADE_INICIAL = 30  # kg que cabem na mochila
+DIVISOR_ZONA_PESADA = 3  # o último 1/3 da mochila é a zona pesada: o jogador anda lento
 
 CHANCE_PERGAMINHO = 25   # % de chance de um baú ter um pergaminho
 
 #resultado
 
-BONUS_MAXIMO_OURO = 50      # bônus de quem empata com o guloso
-BONUS_VENCEU_GULOSO = 30    # bônus extra de quem ganha do guloso
+APROVEITAMENTO_MINIMO = 0.8  # abaixo de 80% do valor do guloso não há bônus
+BONUS_MAXIMO_OURO = 50       # bônus de quem empata com o guloso
+BONUS_VENCEU_GULOSO = 30     # bônus extra de quem ganha do guloso
 
 #mercador
 
