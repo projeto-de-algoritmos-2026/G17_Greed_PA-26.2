@@ -125,6 +125,11 @@ Para garantir um desenvolvimento ágil, com foco total na lógica dos algoritmos
 * **Python:** linguagem principal do projeto, usada tanto na lógica dos algoritmos quanto na interface do jogo.
 * **Pygame (pygame-ce):** biblioteca utilizada para renderização gráfica, captura de input (teclado) e controle do game loop. Não se trata de um framework — apenas uma ferramenta de baixo nível para desenho e eventos, sobre a qual toda a arquitetura do jogo foi construída do zero.
 
+### 🎨 Arte
+
+* **Jogador, baús, escada, mercador e moedas:** pacote [16x16 DungeonTileset II](https://0x72.itch.io/dungeontileset-ii), de 0x72, em domínio público (CC0). Os arquivos e os créditos estão em `assets/sprites/0x72/`.
+* **Piso e paredes:** arte própria do grupo, em `assets/sprites/PNG/`.
+
 > Observação: o projeto foi estruturado desde o início pensando em uma futura migração para a web via **Pygbag** (compilação para WebAssembly), mantendo os módulos de algoritmos independentes da camada visual.
 
 ## Vídeo de Apresentação

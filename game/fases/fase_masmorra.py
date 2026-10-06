@@ -18,11 +18,11 @@ from ui.painel import desenhar_barra, desenhar_painel, desenhar_lista_itens
 from ui.texto import desenhar_texto, desenhar_texto_centralizado, desenhar_texto_direita
 from config import TAMANHO_PISO, COLUNAS, LINHAS
 
-# Medidas dos painéis de mochila e baú
+# painel de mochila/bau
 ALTURA_PAINEL = 268
-ALTURA_RODAPE = 56   # faixa de baixo, com a dica e as teclas
-Y_LISTA = 52         # onde começam os itens, contando do topo do painel
-ITENS_NO_PAINEL = 7  # itens visíveis de cada vez (o resto rola)
+ALTURA_RODAPE = 56
+Y_LISTA = 52
+ITENS_NO_PAINEL = 7  # itens visiveis
 
 
 class celulaBSP:
@@ -131,7 +131,7 @@ class FaseMasmorra(Fase):
 
         self.painel_focado = "MOCHILA"
         self.indice_selecionado = 0
-        self.aviso = None  # recado no rodapé do painel (some na próxima tecla)
+        self.aviso = None
 
         # O primeiro andar é sempre o mesmo; os outros são sorteados
         if self.progresso.andar == 1:
@@ -193,9 +193,9 @@ class FaseMasmorra(Fase):
             self.grupo_sprites.add(bau)
             self.grupo_baus.add(bau)
 
+        # desenhado por ultimo, na frente dos baus
         x, y = self.posicao_jogador
         self.jogador = Jogador(x * TAMANHO_PISO, y * TAMANHO_PISO, self.grupo_paredes, self.progresso)
-        self.grupo_sprites.add(self.jogador)
 
     def guardar_itens_do_andar(self):
         """Guarda tudo que o jogador poderia levar deste andar (baús + o que já
@@ -209,7 +209,7 @@ class FaseMasmorra(Fase):
 
     def atualizar(self, eventos):
         if self.estado_fase == "EXPLORANDO":
-            super().atualizar(eventos)
+            self.jogador.update()
 
             for evento in eventos:
                 if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
@@ -298,7 +298,7 @@ class FaseMasmorra(Fase):
 
         adicionar_item(destino, retirar_item(origem, self.indice_selecionado))
         self.indice_selecionado = max(0, min(self.indice_selecionado, len(origem) - 1))
-        self.bau_aberto_atualmente.atualizar_cor()
+        self.bau_aberto_atualmente.atualizar_imagem()
 
     def gerar_escada(self):
         if self.escada_gerada:
@@ -333,7 +333,6 @@ class FaseMasmorra(Fase):
         return titulo
 
     def dica_da_mochila(self):
-        """Uma linha (texto, cor) para o rodapé do painel: explica a regra de peso que vale agora."""
         progresso = self.progresso
 
         if self.aviso:
@@ -351,6 +350,7 @@ class FaseMasmorra(Fase):
     def desenhar(self, ecra):
         ecra.fill(self.cor_fundo)
         self.grupo_sprites.draw(ecra)
+        self.jogador.desenhar(ecra)
 
         if self.estado_fase == "EXPLORANDO":
             self.desenhar_informacoes(ecra)
@@ -375,7 +375,6 @@ class FaseMasmorra(Fase):
         meio = largura_painel // 2
         largura_coluna = meio - 40
 
-        # a divisória para no rodapé, que ocupa a largura toda do painel
         y_rodape = y_painel + ALTURA_PAINEL - ALTURA_RODAPE
         pygame.draw.line(ecra, COR_DIVISORIA_PAINEL, (x_painel + meio, y_painel + 2),
                          (x_painel + meio, y_rodape), 2)
@@ -407,7 +406,6 @@ class FaseMasmorra(Fase):
                              "[SETAS] Navegar   [E / ESC] Fechar")
 
     def desenhar_coluna_mochila(self, ecra, x, y_painel, largura, cor_titulo, selecionado):
-        """Título, barra de peso e itens da mochila."""
         progresso = self.progresso
         pesado = progresso.esta_pesado()
 
@@ -419,7 +417,7 @@ class FaseMasmorra(Fase):
         desenhar_barra(ecra, x, y_barra, largura, 6, progresso.peso_total() / progresso.capacidade_maxima,
                        VERMELHO if pesado else VERDE)
 
-        # o risco marca onde começa a zona pesada (dali para a direita o jogador anda lento)
+        # inicio da zona pesada
         x_risco = x + largura * progresso.peso_leve() // progresso.capacidade_maxima
         pygame.draw.line(ecra, BRANCO, (x_risco, y_barra - 2), (x_risco, y_barra + 7))
 
@@ -433,7 +431,6 @@ class FaseMasmorra(Fase):
         desenhar_lista_itens(ecra, self.fonte_texto, itens, x, y, largura + 10, selecionado, ITENS_NO_PAINEL)
 
     def desenhar_rodape(self, ecra, x_painel, y_rodape, largura_painel, teclas):
-        """Faixa de baixo do painel: a dica da mochila e, embaixo, as teclas."""
         pygame.draw.line(ecra, COR_DIVISORIA_PAINEL, (x_painel + 2, y_rodape),
                          (x_painel + largura_painel - 3, y_rodape), 2)
 

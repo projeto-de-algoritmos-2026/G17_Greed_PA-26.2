@@ -1,0 +1,11 @@
+Sprites do pacote "16x16 DungeonTileset II" (v1.7), de 0x72
+https://0x72.itch.io/dungeontileset-ii
+
+Licença: CC0 1.0 (domínio público)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+knight_m_*   jogador
+chest_*      baús (fechado, aberto com itens, aberto vazio)
+dwarf_m_*    mercador
+coin_anim_*  moedas
+escada.png   escada do floor_ladder.png adaptada para o piso roxo do jogo

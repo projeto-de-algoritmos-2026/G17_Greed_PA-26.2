@@ -6,29 +6,15 @@ PRETO = (0, 0, 0)
 DOURADO = (255, 215, 0)
 # Vermelho claro (avisos)
 VERMELHO = (230, 90, 90)
-# Verde claro (tudo certo)
+# Verde claro
 VERDE = (80, 220, 100)
-# Azul claro (o algoritmo guloso na tela de resultado)
+# Azul claro do guloso
 COR_GULOSO = (90, 170, 230)
 
 # Cinza-azulado muito escuro
 COR_FUNDO_MASMORRA = (30, 30, 40)
 # Roxo bem escuro (mesma cor do miolo das paredes)
 COR_FUNDO_MENU = (23, 21, 47)
-
-# Verde claro
-COR_JOGADOR = (100, 200, 100)
-# Bronze
-COR_BAU = (218, 165, 32)
-
-# Marrom do bau aberto
-CINZA_BAU_ABERTO = (139, 69, 19)
-# Cinza marrom esverdeado sla
-COR_BAU_VAZIO = (73,74,51)
-# Azul-arroxeado do mercador
-COR_MERCADOR = (120, 90, 170)
-# Amarelo-ouro das moedas
-COR_MOEDA = (230, 190, 60)
 
 # Cinza-azulado do fundo do painel
 COR_FUNDO_PAINEL = (50, 50, 60)

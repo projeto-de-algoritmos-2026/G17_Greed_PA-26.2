@@ -1,16 +1,17 @@
 import pygame
 from config import *
-from ui.cores import (
-    CINZA_BAU_ABERTO,
-    COR_BAU,
-    COR_JOGADOR, COR_BAU_VAZIO, CINZA_INATIVO,
-)
 
 CACHE_IMAGENS={}
 def obter_imagem(caminho):
     if caminho not in CACHE_IMAGENS:
         CACHE_IMAGENS[caminho] = pygame.image.load(caminho).convert_alpha()
     return CACHE_IMAGENS[caminho]
+
+# sprites do 0x72 (CC0)
+PASTA_0X72 = 'assets/sprites/0x72/'
+
+def carregar_animacao(nome, quadros=4):
+    return [obter_imagem(f"{PASTA_0X72}{nome}_f{i}.png") for i in range(quadros)]
 
 CACHE_SONS={}
 def obter_som(caminho):
@@ -21,10 +22,14 @@ def obter_som(caminho):
 class Jogador(pygame.sprite.Sprite):
     def __init__(self, x, y, paredes, progresso):
         super().__init__()
-        # PLACEHOLDER: trocar por sprite
-        self.image = pygame.Surface((0.75*TAMANHO_PISO, 0.75*TAMANHO_PISO))
-        self.image.fill(COR_JOGADOR)
-        self.rect = self.image.get_rect(topleft=(x+0.25*TAMANHO_PISO,y+0.25*TAMANHO_PISO)) # colisao
+        self.parado = carregar_animacao("knight_m_idle_anim")
+        self.correndo = carregar_animacao("knight_m_run_anim")
+        self.image = self.parado[0]
+        self.tempo_animacao = 0
+        self.virado_para_esquerda = False
+
+        # colisao (menor que o desenho)
+        self.rect = pygame.Rect(x+0.25*TAMANHO_PISO, y+0.25*TAMANHO_PISO, 0.75*TAMANHO_PISO, 0.75*TAMANHO_PISO)
 
         self.paredes = paredes # pra colisao
         self.progresso = progresso # pra saber o peso da mochila
@@ -59,6 +64,20 @@ class Jogador(pygame.sprite.Sprite):
                 if dy < 0: self.rect.top = parede.rect.bottom
 
         self.rect.clamp_ip(pygame.Rect(0, 0, LARGURA_VIRTUAL, ALTURA_VIRTUAL))
+        self.animar(dx, dy, velocidade)
+
+    def animar(self, dx, dy, velocidade):
+        if dx < 0: self.virado_para_esquerda = True
+        if dx > 0: self.virado_para_esquerda = False
+
+        quadros = self.correndo if (dx != 0 or dy != 0) else self.parado
+
+        self.tempo_animacao += velocidade
+        quadro = quadros[self.tempo_animacao // TEMPO_POR_QUADRO % len(quadros)]
+        self.image = pygame.transform.flip(quadro, self.virado_para_esquerda, False)
+
+    def desenhar(self, ecra):
+        ecra.blit(self.image, self.image.get_rect(midbottom=self.rect.midbottom))
 
 class Item:
     def __init__(self, nome, peso, valor, raridade="COMUM", a_granel=False, texto=None):
@@ -85,12 +104,14 @@ class Item:
             return f"{self.nome} ({self.peso}kg) $???"
         return f"{self.nome} ({self.peso}kg) ${self.valor}"
 
+BAU_FECHADO = PASTA_0X72 + 'chest_full_open_anim_f0.png'
+BAU_ABERTO = PASTA_0X72 + 'chest_full_open_anim_f2.png'
+BAU_VAZIO = PASTA_0X72 + 'chest_empty_open_anim_f2.png'
+
 class Bau(pygame.sprite.Sprite):
     def __init__(self, x, y, itens=None):
         super().__init__()
-        # PLACEHOLDER: trocar por sprite
-        self.image = pygame.Surface((TAMANHO_PISO, TAMANHO_PISO))
-        self.image.fill(COR_BAU)
+        self.image = obter_imagem(BAU_FECHADO)
         self.rect = self.image.get_rect(topleft=(x,y))
 
         self.itens = itens if itens else[]
@@ -100,24 +121,22 @@ class Bau(pygame.sprite.Sprite):
 
     def abrir(self):
         self.aberto = True
-        self.atualizar_cor()
+        self.atualizar_imagem()
         self.som_abrir.play()
         return self.itens
 
-    def atualizar_cor(self):
+    def atualizar_imagem(self):
         if not self.aberto:
-            self.image.fill(COR_BAU)
+            self.image = obter_imagem(BAU_FECHADO)
         elif len(self.itens) > 0:
-            self.image.fill(CINZA_BAU_ABERTO)
+            self.image = obter_imagem(BAU_ABERTO)
         else:
-            self.image.fill(COR_BAU_VAZIO)
+            self.image = obter_imagem(BAU_VAZIO)
 
 class Escada(pygame.sprite.Sprite):
     def __init__(self,x,y):
         super().__init__()
-        # PLACEHOLDER: trocar por sprite
-        self.image = pygame.Surface((TAMANHO_PISO, TAMANHO_PISO))
-        self.image.fill(CINZA_INATIVO)
+        self.image = obter_imagem(PASTA_0X72 + 'escada.png')
         self.rect = self.image.get_rect(topleft=(x, y))
 
 
@@ -199,30 +218,44 @@ def tipo_parede(matriz, x, y):
 
 PASTA_PAREDES = 'assets/sprites/PNG/'
 
-# Aparência de cada tipo de parede: caminho do PNG ou, enquanto não há sprite, uma cor.
-# PLACEHOLDER: trocar as cores por sprites.
+PAREDE_CHAO_EMBAIXO = PASTA_PAREDES + 'teto cima.png'
+PAREDE_CHAO_EM_CIMA = PASTA_PAREDES + 'teto inferior.png'
+PAREDE_CHAO_NA_DIREITA = PASTA_PAREDES + 'teto esquerdo.png'
+PAREDE_CHAO_NA_ESQUERDA = PASTA_PAREDES + 'teto direita.png'
+
+# Aparência de cada tipo de parede: caminho do PNG, cor, ou lista de PNGs sobrepostos.
 APARENCIA_PAREDE = {
-    "PILAR": (255, 255, 255),
-    "PONTA_BAIXO": (255, 100, 100),
-    "PONTA_CIMA": (100, 255, 100),
-    "PONTA_DIR": (100, 100, 255),
-    "PONTA_ESQ": (255, 255, 100),
-    "FINA_HORIZONTAL": (255, 150, 0),
-    "FINA_VERTICAL": (0, 255, 150),
+    "PILAR": [PAREDE_CHAO_EM_CIMA, PAREDE_CHAO_EMBAIXO, PAREDE_CHAO_NA_ESQUERDA, PAREDE_CHAO_NA_DIREITA],
+    "PONTA_BAIXO": [PAREDE_CHAO_EMBAIXO, PAREDE_CHAO_NA_ESQUERDA, PAREDE_CHAO_NA_DIREITA],
+    "PONTA_CIMA": [PAREDE_CHAO_EM_CIMA, PAREDE_CHAO_NA_ESQUERDA, PAREDE_CHAO_NA_DIREITA],
+    "PONTA_DIR": [PAREDE_CHAO_EM_CIMA, PAREDE_CHAO_EMBAIXO, PAREDE_CHAO_NA_DIREITA],
+    "PONTA_ESQ": [PAREDE_CHAO_EM_CIMA, PAREDE_CHAO_EMBAIXO, PAREDE_CHAO_NA_ESQUERDA],
+    "FINA_HORIZONTAL": [PAREDE_CHAO_NA_ESQUERDA, PAREDE_CHAO_NA_DIREITA],
+    "FINA_VERTICAL": [PAREDE_CHAO_EM_CIMA, PAREDE_CHAO_EMBAIXO],
     "CANTO_SUP_ESQ": PASTA_PAREDES + 'quina j.png',
     "CANTO_SUP_DIR": PASTA_PAREDES + 'quina l.png',
     "CANTO_INF_ESQ": PASTA_PAREDES + 'quina j invertido.png',
     "CANTO_INF_DIR": PASTA_PAREDES + 'quina l invertido.png',
-    "RETA_CIMA": PASTA_PAREDES + 'teto cima.png',
-    "RETA_BAIXO": PASTA_PAREDES + 'teto inferior.png',
-    "RETA_ESQ": PASTA_PAREDES + 'teto esquerdo.png',
-    "RETA_DIR": PASTA_PAREDES + 'teto direita.png',
+    "RETA_CIMA": PAREDE_CHAO_EMBAIXO,
+    "RETA_BAIXO": PAREDE_CHAO_EM_CIMA,
+    "RETA_ESQ": PAREDE_CHAO_NA_DIREITA,
+    "RETA_DIR": PAREDE_CHAO_NA_ESQUERDA,
     "QUINA_SUP_ESQ": PASTA_PAREDES + 'teto superior esquerdo.png',
     "QUINA_SUP_DIR": PASTA_PAREDES + 'teto superior direito.png',
     "QUINA_INF_ESQ": PASTA_PAREDES + 'teto inferior esquerdo.png',
     "QUINA_INF_DIR": PASTA_PAREDES + 'teto inferior direito.png',
     "MACICO": (23, 21, 47),  # a cor do fundo roxo
 }
+
+
+def sobrepor_imagens(caminhos):
+    chave = "+".join(caminhos)
+    if chave not in CACHE_IMAGENS:
+        imagem = obter_imagem(caminhos[0]).copy()
+        for caminho in caminhos[1:]:
+            imagem.blit(obter_imagem(caminho), (0, 0), special_flags=pygame.BLEND_RGBA_MAX)
+        CACHE_IMAGENS[chave] = imagem
+    return CACHE_IMAGENS[chave]
 
 
 class Parede(pygame.sprite.Sprite):
@@ -233,6 +266,8 @@ class Parede(pygame.sprite.Sprite):
         aparencia = APARENCIA_PAREDE[self.tipo]
         if isinstance(aparencia, str):
             self.image = obter_imagem(aparencia)
+        elif isinstance(aparencia, list):
+            self.image = sobrepor_imagens(aparencia)
         else:
             self.image = pygame.Surface((TAMANHO_PISO, TAMANHO_PISO))
             self.image.fill(aparencia)

@@ -13,6 +13,7 @@ from config import (
     PRECO_SORTE,
     TEMPOS_MINIJOGO,
 )
+from game.entidades import carregar_animacao
 from game.estado import EstadoJogo
 from game.fases.fase import Fase
 from game.itens import PERGAMINHOS
@@ -23,11 +24,8 @@ from ui.cores import (
     COR_CURSOR,
     COR_FUNDO_MENU,
     COR_FUNDO_PAINEL,
-    COR_MERCADOR,
-    COR_MOEDA,
     CORES_RARIDADE,
     DOURADO,
-    PRETO,
     VERDE,
     VERMELHO,
 )
@@ -38,6 +36,24 @@ from ui.texto import desenhar_texto
 X_CONTEUDO = 140
 Y_CONTEUDO = 128
 LARGURA_CONTEUDO = 480
+
+# retrato do mercador e moedas
+QUADRO_MERCADOR = pygame.Rect(24, 44, 96, 150)
+ESCALA_MERCADOR = 6
+ESCALA_MOEDA = 5
+
+
+def ampliar(imagem, escala):
+    largura, altura = imagem.get_size()
+    return pygame.transform.scale(imagem, (largura * escala, altura * escala))
+
+
+def carregar_retrato(nome):
+    quadros = carregar_animacao(nome)
+
+    # mesmo recorte em todos os quadros
+    recorte = quadros[0].get_bounding_rect().unionall([quadro.get_bounding_rect() for quadro in quadros])
+    return [ampliar(quadro.subsurface(recorte), ESCALA_MERCADOR) for quadro in quadros]
 
 
 def formatar_moedas(moedas):
@@ -53,14 +69,12 @@ def formatar_moedas(moedas):
 
 
 def tempo_do_pagamento(preco):
-    """Segundos para pagar: quanto mais moedas o pagamento pede, mais tempo."""
     moedas = len(troco_guloso(preco, MOEDAS))
     indice = min(max(0, moedas - 2), len(TEMPOS_MINIJOGO) - 1)
     return TEMPOS_MINIJOGO[indice]
 
 
 def tempo_do_pergaminho(raridade):
-    """Segundos para decifrar: quanto mais raro (palavra maior), mais tempo."""
     return TEMPOS_MINIJOGO[PERGAMINHOS[raridade]["nivel"] - 1]
 
 
@@ -89,12 +103,16 @@ class FaseMercador(Fase):
         self.codigos = {}
         self.bits = ""
         self.palavra_digitada = ""
-        self.pergaminho_iniciado = False  # o tempo só corre depois que o jogador começa
+        self.pergaminho_iniciado = False
         self.pergaminho_lido = False
 
-        # cronômetro dos dois minijogos (pagar e decifrar), em segundos
+        # cronometro dos minijogos (segundos)
         self.tempo_total = 0
         self.tempo_restante = 0
+
+        self.quadros_mercador = carregar_retrato("dwarf_m_idle_anim")
+        self.quadros_moeda = [ampliar(quadro, ESCALA_MOEDA) for quadro in carregar_animacao("coin_anim")]
+        self.tempo_animacao = 0
 
     # ------------------------------------------------------------------
     # Menu principal do mercador
@@ -144,8 +162,10 @@ class FaseMercador(Fase):
         return (f"{nome} nível {nivel + 1}", preco_base * (nivel + 1), fala, acao)
 
     def atualizar(self, eventos):
+        self.tempo_animacao += 1
+
         if self.passar_tempo():
-            return  # o tempo acabou neste instante: as teclas deste quadro não valem
+            return
 
         for evento in eventos:
             if evento.type != pygame.KEYDOWN:
@@ -199,7 +219,6 @@ class FaseMercador(Fase):
         return self.estado_fase == "PERGAMINHO" and self.pergaminho_iniciado and not self.pergaminho_lido
 
     def passar_tempo(self):
-        """Desconta um quadro do cronômetro. Devolve True quando o tempo acaba."""
         if not self.tempo_correndo():
             return False
 
@@ -389,7 +408,6 @@ class FaseMercador(Fase):
                 self.resposta = None
 
         elif not self.pergaminho_iniciado:
-            # a tabela e os bits só aparecem quando o tempo começa a correr
             if evento.key == pygame.K_ESCAPE:
                 self.voltar_ao_menu()
                 self.resposta = ["Tudo bem, o pergaminho continua selado."]
@@ -429,9 +447,7 @@ class FaseMercador(Fase):
                     f" | Andar {progresso.andar}")
         desenhar_texto(ecra, situacao, X_CONTEUDO, 14, self.fonte_texto, BRANCO)
 
-        # PLACEHOLDER: trocar por sprite do mercador
-        pygame.draw.rect(ecra, COR_MERCADOR, (24, 44, 96, 150))
-
+        self.desenhar_mercador(ecra)
         self.desenhar_fala(ecra)
 
         if self.estado_fase == "MENU":
@@ -455,6 +471,14 @@ class FaseMercador(Fase):
 
         desenhar_texto(ecra, rodape, 24, 340, self.fonte_texto, CINZA_INATIVO)
 
+    def desenhar_mercador(self, ecra):
+        pygame.draw.rect(ecra, COR_FUNDO_PAINEL, QUADRO_MERCADOR)
+
+        quadro = self.quadros_mercador[self.tempo_animacao // 10 % len(self.quadros_mercador)]
+        ecra.blit(quadro, quadro.get_rect(midbottom=(QUADRO_MERCADOR.centerx, QUADRO_MERCADOR.bottom - 6)))
+
+        pygame.draw.rect(ecra, COR_BORDA_PAINEL, QUADRO_MERCADOR, width=2)
+
     def desenhar_fala(self, ecra):
         pygame.draw.rect(ecra, COR_FUNDO_PAINEL, (X_CONTEUDO, 44, LARGURA_CONTEUDO, 70))
         pygame.draw.rect(ecra, COR_BORDA_PAINEL, (X_CONTEUDO, 44, LARGURA_CONTEUDO, 70), width=2)
@@ -467,7 +491,6 @@ class FaseMercador(Fase):
             desenhar_texto(ecra, linha, X_CONTEUDO + 12, 52 + i * 18, self.fonte_texto, BRANCO)
 
     def desenhar_tempo(self, ecra, y):
-        """Barra do cronômetro dos minijogos: fica vermelha nos últimos segundos."""
         segundos = int(self.tempo_restante) + 1 if self.tempo_restante > 0 else 0
         cor = VERMELHO if segundos <= 3 else VERDE
 
@@ -510,14 +533,18 @@ class FaseMercador(Fase):
             centro_x = X_CONTEUDO + 40 + i * 78
             centro_y = Y_CONTEUDO + 40
 
+            # a moeda escolhida gira
+            quadro = self.quadros_moeda[0]
+            cor = BRANCO
             if i == self.indice_moeda:
                 pygame.draw.rect(ecra, COR_CURSOR, (centro_x - 30, centro_y - 30, 60, 60))
+                quadro = self.quadros_moeda[self.tempo_animacao // 6 % len(self.quadros_moeda)]
+                cor = DOURADO
 
-            # PLACEHOLDER: trocar por sprite de moeda
-            pygame.draw.circle(ecra, COR_MOEDA, (centro_x, centro_y), 22)
+            ecra.blit(quadro, quadro.get_rect(center=(centro_x, centro_y - 8)))
 
             largura_texto = self.fonte_texto.size(str(moeda))[0]
-            desenhar_texto(ecra, str(moeda), centro_x - largura_texto // 2, centro_y - 8, self.fonte_texto, PRETO)
+            desenhar_texto(ecra, str(moeda), centro_x - largura_texto // 2, centro_y + 13, self.fonte_texto, cor)
 
         desenhar_texto(ecra, f"Na mesa: {na_mesa} de {self.preco} ({len(self.moedas_na_mesa)} moedas)",
                        X_CONTEUDO + 12, Y_CONTEUDO + 90, self.fonte_texto, DOURADO)
@@ -528,7 +555,6 @@ class FaseMercador(Fase):
         self.desenhar_tempo(ecra, Y_CONTEUDO + 140)
 
     def desenhar_pergaminho_selado(self, ecra):
-        """Antes de começar: só o tamanho do desafio, para ninguém ler a tabela com o tempo parado."""
         x = X_CONTEUDO + 12
         cor_raridade = CORES_RARIDADE[self.pergaminho.raridade]
 
