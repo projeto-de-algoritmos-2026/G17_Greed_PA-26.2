@@ -110,7 +110,7 @@ class FaseMercador(Fase):
         self.tempo_total = 0
         self.tempo_restante = 0
 
-        self.quadros_mercador = carregar_retrato("dwarf_m_idle_anim")
+        self.quadros_mercador = carregar_retrato("necromancer_anim")
         self.quadros_moeda = [ampliar(quadro, ESCALA_MOEDA) for quadro in carregar_animacao("coin_anim")]
         self.tempo_animacao = 0
 
@@ -475,7 +475,7 @@ class FaseMercador(Fase):
         pygame.draw.rect(ecra, COR_FUNDO_PAINEL, QUADRO_MERCADOR)
 
         quadro = self.quadros_mercador[self.tempo_animacao // 10 % len(self.quadros_mercador)]
-        ecra.blit(quadro, quadro.get_rect(midbottom=(QUADRO_MERCADOR.centerx, QUADRO_MERCADOR.bottom - 6)))
+        ecra.blit(quadro, quadro.get_rect(center=QUADRO_MERCADOR.center))
 
         pygame.draw.rect(ecra, COR_BORDA_PAINEL, QUADRO_MERCADOR, width=2)
 

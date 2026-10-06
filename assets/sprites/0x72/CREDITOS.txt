@@ -6,6 +6,6 @@ https://creativecommons.org/publicdomain/zero/1.0/
 
 knight_m_*   jogador
 chest_*      baús (fechado, aberto com itens, aberto vazio)
-dwarf_m_*    mercador
+necromancer_* mercador
 coin_anim_*  moedas
 escada.png   escada do floor_ladder.png adaptada para o piso roxo do jogo
