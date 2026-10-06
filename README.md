@@ -126,6 +126,7 @@ Para garantir um desenvolvimento ágil, com foco total na lógica dos algoritmos
 * **Pygame (pygame-ce):** biblioteca utilizada para renderização gráfica, captura de input (teclado) e controle do game loop. Não se trata de um framework — apenas uma ferramenta de baixo nível para desenho e eventos, sobre a qual toda a arquitetura do jogo foi construída do zero.
 
 ### 🎨 Arte
+* **Músicas e trilhas sonoras mp3 feitas por mim: [Matheus](https://github.com/Boynic3) em `assets/sons` .
 * **Agradecimento especial ao [Ruy](https://github.com/ruy-oak)** por se disponibilizar a ajudar com os sprites da dungeon em `assets/sprites/PNG/`.
 
 <img width="128" height="128" alt="tileset" src="https://github.com/user-attachments/assets/3b817325-acce-4deb-b00a-131289804102" />
@@ -137,4 +138,4 @@ Para garantir um desenvolvimento ágil, com foco total na lógica dos algoritmos
 
 ## Vídeo de Apresentação
 
-[Link do Vídeo Gravado no Teams](LINK_DO_VIDEO)
+[Link do Vídeo Gravado no Teams](https://unbbr-my.sharepoint.com/:v:/r/personal/251019771_aluno_unb_br/Documents/Grava%C3%A7%C3%B5es/Call%20with%20Matheus%20Moretti%20Soares-20261005_223347-Meeting%20Recording.mp4?d=w1943671351d3439ebb7ac85de823e4c5&csf=1&web=1&e=2WScJB&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D)
