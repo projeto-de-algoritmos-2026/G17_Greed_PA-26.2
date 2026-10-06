@@ -1,5 +1,5 @@
 <h1><font size="6"><b>Nightfall Looter</b></font><br></h1>
-<h3><b>Número da Lista:</b> [PREENCHER]<br></h3>
+<h3><b>Número da Lista:</b> 17<br></h3>
 <h3><i>Conteúdo da disciplina:</i> Algoritmos Gulosos<br></h3>
 <h3>Alunos</h3>
 
@@ -126,9 +126,12 @@ Para garantir um desenvolvimento ágil, com foco total na lógica dos algoritmos
 * **Pygame (pygame-ce):** biblioteca utilizada para renderização gráfica, captura de input (teclado) e controle do game loop. Não se trata de um framework — apenas uma ferramenta de baixo nível para desenho e eventos, sobre a qual toda a arquitetura do jogo foi construída do zero.
 
 ### 🎨 Arte
+* **Agradecimento especial ao [Ruy](https://github.com/ruy-oak)** por se disponibilizar a ajudar com os sprites da dungeon em `assets/sprites/PNG/`.
 
+<img width="128" height="128" alt="tileset" src="https://github.com/user-attachments/assets/3b817325-acce-4deb-b00a-131289804102" />
+ 
 * **Jogador, baús, escada, mercador e moedas:** pacote [16x16 DungeonTileset II](https://0x72.itch.io/dungeontileset-ii), de 0x72, em domínio público (CC0). Os arquivos e os créditos estão em `assets/sprites/0x72/`.
-* **Piso e paredes:** arte própria do grupo, em `assets/sprites/PNG/`.
+
 
 > Observação: o projeto foi estruturado desde o início pensando em uma futura migração para a web via **Pygbag** (compilação para WebAssembly), mantendo os módulos de algoritmos independentes da camada visual.
 
