@@ -80,7 +80,7 @@ def tempo_do_pergaminho(raridade):
 
 class FaseMercador(Fase):
     def __init__(self, progresso):
-        super().__init__(progresso, cor_fundo=COR_FUNDO_MENU, musica='assets/sons/intro.mpeg')
+        super().__init__(progresso, cor_fundo=COR_FUNDO_MENU, musica='assets/sons/goofy song sla.mp3')
 
         # MENU, VENDENDO, PAGANDO ou PERGAMINHO
         self.estado_fase = "MENU"

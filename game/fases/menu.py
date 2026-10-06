@@ -10,7 +10,7 @@ OPCOES = ["Iniciar", "Controles", "Sair"]
 
 class Menu(Fase):
     def __init__(self, progresso):
-        super().__init__(progresso, cor_fundo=COR_FUNDO_MENU, musica='assets/sons/intro.mpeg')
+        super().__init__(progresso, cor_fundo=COR_FUNDO_MENU, musica='assets/sons/masmorra faixa simples.mp3')
         self.fonte_logo = carregar_fonte(40)
 
         self.indice_selecionado = 0
