@@ -22,7 +22,7 @@ class Fase:
             return
 
         pygame.mixer.music.load(self.musica_ambiente)
-        pygame.mixer.music.set_volume(0.5)
+        pygame.mixer.music.set_volume(0.195)
         pygame.mixer.music.play(-1)
         Fase.musica_tocando = self.musica_ambiente
 

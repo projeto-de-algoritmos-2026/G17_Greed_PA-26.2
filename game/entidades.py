@@ -117,7 +117,7 @@ class Bau(pygame.sprite.Sprite):
         self.itens = itens if itens else[]
         self.aberto = False
         self.som_abrir = obter_som("assets/sons/bau.mpeg")
-        self.som_abrir.set_volume(0.15)
+        self.som_abrir.set_volume(0.0585)
 
     def abrir(self):
         self.aberto = True

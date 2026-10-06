@@ -1,6 +1,5 @@
 import heapq
 
-
 def construir_codigos(texto):
     frequencias = {}
     for letra in texto:
